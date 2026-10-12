@@ -20,5 +20,7 @@ rm -rf "$iconset"
 iconutil -c icns "$iconset" -o "$app/Contents/Resources/AppIcon.icns"
 cp "$root/runtime/pyproject.toml" "$root/runtime/uv.lock" "$app/Contents/Resources/runtime/"
 cp -R "$root/runtime/src" "$app/Contents/Resources/runtime/src"
+# Bytecode caches written by a previous run would break the code signature.
+find "$app/Contents/Resources/runtime" -name __pycache__ -type d -prune -exec rm -rf {} +
 codesign --force --sign - "$app"
 echo "$app"

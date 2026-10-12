@@ -145,6 +145,8 @@ final class FishServer {
         let process = Process()
         process.executableURL = venvURL.appendingPathComponent("bin/python")
         process.arguments = ["-m", "fishd", "serve", "--port", String(config.port), "--state-dir", config.stateDir.path]
+        // The runtime lives inside the signed app bundle, so it must not write bytecode there.
+        process.environment = ProcessInfo.processInfo.environment.merging(["PYTHONDONTWRITEBYTECODE": "1"]) { _, new in new }
         let log = try Self.logHandle(logsURL.appendingPathComponent("fishd.log"))
         process.standardOutput = log
         process.standardError = log
