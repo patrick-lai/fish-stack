@@ -29,10 +29,14 @@ def make_server(host, port, service, api_key):
     expected = ("Bearer " + api_key).encode()
 
     class Handler(BaseHTTPRequestHandler):
+        sent = None
+        via = None
+
         def log_message(self, *args):
             pass
 
         def reply(self, status, value):
+            self.sent = status
             body = json.dumps(value).encode()
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
@@ -43,8 +47,12 @@ def make_server(host, port, service, api_key):
         def authorized(self, leases_ok=False):
             supplied = (self.headers.get("Authorization") or "")
             if hmac.compare_digest(supplied.encode("utf-8", "surrogateescape"), expected):
+                self.via = "master key"
                 return True
-            return leases_ok and supplied.startswith(BEARER) and service.accepts_lease(supplied[len(BEARER):])
+            if leases_ok and supplied.startswith(BEARER) and service.accepts_lease(supplied[len(BEARER):]):
+                self.via = "lease"
+                return True
+            return False
 
         def read_json(self):
             length = self.headers.get("Content-Length")
@@ -112,6 +120,9 @@ def make_server(host, port, service, api_key):
             except Exception:
                 log.exception("request failed: %s %s", method, self.path)
                 self.reply(500, {"detail": "internal error; see the fishd log"})
+            finally:
+                if self.path != "/health":
+                    log.info("served %s %s -> %s (%s)", method, self.path, self.sent, self.via or "no key")
 
         def do_GET(self):
             self.handle_method("GET")

@@ -64,7 +64,12 @@ curl -s -X POST -H "Authorization: Bearer $KEY" -H 'Content-Type: application/js
 
 ## CommissionAI
 
-fish-stack replaces pAtelier for CommissionAI. Once it runs, it writes `~/.patelier/run/daemon.json`, and CommissionAI's local JEV leases the decision endpoint from it instead of starting its own `jev-local` runtime. CommissionAI reads the lease when its local JEV starts, so restart CommissionAI after fish-stack is up to switch. If the lease is refused, CommissionAI falls back to its own runtime. The record is removed when fish-stack quits.
+fish-stack replaces pAtelier for CommissionAI, and CommissionAI reaches it in two ways:
+
+- **Endpoint setting (preferred):** start CommissionAI with `COMMISSION_JEV_LOCAL_ENDPOINT=http://127.0.0.1:8089` and `COMMISSION_JEV_LOCAL_KEY_FILE="$HOME/Library/Application Support/FishStack/api-key"`. CommissionAI checks the endpoint with its own decision smoke test (billing at 0.85 or higher) and uses it instead of starting its own `jev-local` runtime. The endpoint must be a loopback http origin. A failing or misconfigured endpoint falls back to the paths below.
+- **pAtelier lease:** fish-stack writes `~/.patelier/run/daemon.json`, and CommissionAI leases the decision endpoint from it when no endpoint setting is present.
+
+Either way CommissionAI reads its settings when it starts, so restart it to switch. If neither path works, it falls back to its own runtime. fish-stack logs every served request, for example `served POST /v1/systemone -> 200 (master key)`, in `<state>/logs/fishd.log`. The record is removed when fish-stack quits.
 
 The end-to-end check lives in the commission-ai repo. It is the ignored test `fish_stack_lease`, which runs CommissionAI's real `LocalJev` against a running fish-stack. From `service/` in that repo: `cargo test -p commission-service --test suite commissionai_takes_the_decision_lease_from_fish_stack -- --ignored --nocapture`.
 

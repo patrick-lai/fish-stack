@@ -1,5 +1,6 @@
 import http.client
 import json
+import logging
 import sys
 import tempfile
 import threading
@@ -166,6 +167,28 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 401)
         status, data = self.call("PUT", "/v1/leases/" + lease["lease_id"], auth=False)
         self.assertEqual((status, data["code"]), (404, "patelier.not_found"))
+
+    def test_each_served_decision_is_logged_with_the_key_that_opened_it(self):
+        lines = []
+
+        class Collect(logging.Handler):
+            def emit(self, record):
+                lines.append(record.getMessage())
+
+        collector = Collect(level=logging.INFO)
+        logger = logging.getLogger("fishd")
+        previous = logger.level
+        logger.setLevel(logging.INFO)
+        logger.addHandler(collector)
+        self.addCleanup(logger.setLevel, previous)
+        self.addCleanup(logger.removeHandler, collector)
+        wait_until(lambda: self.model("owner--decision@r1").get("state") == "ready")
+        self.call("POST", "/v1/systemone", {"state": "x", "questions": {"t": {"type": "noul"}}})
+        wait_until(lambda: "served POST /v1/systemone -> 200 (master key)" in lines)
+        wait_until(lambda: self.call("POST", "/v1/leases", {"protocol": "jev-systemone"}, auth=False)[0] == 200)
+        _, lease = self.call("POST", "/v1/leases", {"protocol": "jev-systemone"}, auth=False)
+        self.call("POST", "/v1/systemone", {"state": "x", "questions": {"t": {"type": "noul"}}}, token=lease["api_key"])
+        wait_until(lambda: "served POST /v1/systemone -> 200 (lease)" in lines)
 
     def test_a_lease_for_another_protocol_is_refused(self):
         status, data = self.call("POST", "/v1/leases", {"protocol": "other"}, auth=False)

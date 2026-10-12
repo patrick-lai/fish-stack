@@ -20,6 +20,8 @@ Fish Stack is a native macOS menu-bar app. It runs a local model server (`fishd`
 
 fish-stack takes pAtelier's place for CommissionAI. On start it writes `run/daemon.json` (`{"pid", "port"}`) under the pAtelier home: `--patelier-home`, else `$PATELIER_HOME`, else `~/.patelier`. CommissionAI's local JEV reads that record, leases the decision endpoint with `POST /v1/leases`, verifies it with its billing smoke test, renews it at half-life and releases it on shutdown. If the lease is not granted, CommissionAI falls back to its own `jev-local` runtime, as before. The record is removed on quit, and on SIGTERM. `make run-dev` writes into `state-dev/patelier`, so the dev server never takes over the real home.
 
+CommissionAI also has a loopback endpoint setting, `COMMISSION_JEV_LOCAL_ENDPOINT` with `COMMISSION_JEV_LOCAL_KEY_FILE`, which it tries before the lease. Every served request is logged with its route, status and the key that opened it (`master key` or `lease`).
+
 ## Models
 
 | Role | Default model | Format | Notes |
