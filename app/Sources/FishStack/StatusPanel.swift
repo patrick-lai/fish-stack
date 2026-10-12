@@ -8,11 +8,11 @@ struct StatusPanel: View {
     @State private var source = ""
     @State private var role = "embedding"
 
-    private static let tile = FishMark.tile(side: 44)
+    private static let tile = FishMark.tile(side: 32)
     private static let roles = ["decision", "embedding"]
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             header
             hero
             if let notice = server.notice {
@@ -26,7 +26,7 @@ struct StatusPanel: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(width: 388)
-        .background(NightBackdrop())
+        .background(Night.surface)
         .environment(\.colorScheme, .dark)
     }
 
@@ -37,12 +37,11 @@ struct StatusPanel: View {
             BrandTile(image: Self.tile)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Fish Stack")
-                    .font(.system(size: 18, weight: .semibold))
-                    .tracking(-0.25)
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Night.ink)
                 Text("Local models · port \(server.port)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Night.ink.opacity(0.5))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Night.ink.opacity(0.45))
             }
             Spacer(minLength: 8)
             StatusPill(label: status.label, tone: status.tone, pulsing: status.pulsing)
@@ -56,16 +55,12 @@ struct StatusPanel: View {
             Button("Open state folder") { NSWorkspace.shared.open(server.stateURL) }
         } label: {
             Image(systemName: "ellipsis")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Night.ink.opacity(0.6))
-                .frame(width: 30, height: 30)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Night.ink.opacity(0.55))
+                .frame(width: 28, height: 28)
                 .background {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Color.white.opacity(0.07))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.75)
-                        }
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Night.fill)
                 }
         }
         .menuStyle(.button)
@@ -81,16 +76,15 @@ struct StatusPanel: View {
         let roles = server.health?.roles ?? [:]
         let loaded = roles.values.filter(\.loaded).count
         let total = server.health == nil ? Self.roles.count : max(roles.count, Self.roles.count)
-        return HStack(alignment: .center, spacing: 16) {
+        return HStack(alignment: .center, spacing: 18) {
             NightDial(loaded: loaded, total: total, tone: status.tone, busy: isDownloading)
             VStack(alignment: .leading, spacing: 0) {
-                Text("RIGHT NOW")
-                    .font(.system(size: 9.5, weight: .semibold))
-                    .tracking(1.2)
-                    .foregroundStyle(Night.ink.opacity(0.5))
+                Text("Right now")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Night.ink.opacity(0.42))
                 Text(headline(loaded: loaded, total: total))
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Night.ink.opacity(0.94))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Night.ink)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, 4)
@@ -101,9 +95,9 @@ struct StatusPanel: View {
                 StatLine(symbol: "key.horizontal.fill", label: "Live leases", value: count(server.health?.activity?.leases))
             }
         }
-        .padding(14)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Glass(opacity: 0.05))
     }
 
     private func headline(loaded: Int, total: Int) -> String {
@@ -161,8 +155,8 @@ struct StatusPanel: View {
         TraySection(title: "Library", trailing: server.models.isEmpty ? nil : "\(server.models.count)") {
             if server.models.isEmpty {
                 Text("No models yet. Add one below.")
-                    .font(.system(size: 11.5, weight: .medium))
-                    .foregroundStyle(Night.ink.opacity(0.5))
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(Night.ink.opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
             } else {
@@ -194,11 +188,11 @@ struct StatusPanel: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Image(systemName: "link")
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundStyle(Night.ink.opacity(0.45))
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(Night.ink.opacity(0.4))
                     TextField("Hugging Face URL or owner/name", text: $source)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 11.5, weight: .medium))
+                        .font(.system(size: 11.5))
                         .foregroundStyle(Night.ink)
                         .onSubmit(submit)
                 }
@@ -206,11 +200,7 @@ struct StatusPanel: View {
                 .frame(height: 30)
                 .background {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Color.white.opacity(0.06))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.75)
-                        }
+                        .fill(Night.fill)
                 }
                 HStack {
                     RolePicker(selection: $role)
@@ -239,10 +229,10 @@ struct StatusPanel: View {
     private var footer: some View {
         HStack {
             Text("127.0.0.1:\(server.port) · loopback only")
-                .font(.system(size: 10.5, weight: .medium))
-                .foregroundStyle(Night.ink.opacity(0.42))
+                .font(.system(size: 10.5))
+                .foregroundStyle(Night.ink.opacity(0.38))
             Spacer()
-            GhostButton(title: "Quit", tone: .danger, symbol: "power", height: 24) {
+            GhostButton(title: "Quit", tone: .danger, symbol: "power", height: 24, quiet: true) {
                 NSApplication.shared.terminate(nil)
             }
         }
@@ -379,8 +369,8 @@ private struct RolePicker: View {
             selection = value
         } label: {
             Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(selected ? Night.ink : Night.ink.opacity(0.5))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(selected ? Night.ink : Night.ink.opacity(0.45))
                 .padding(.horizontal, 10)
                 .frame(height: 22)
                 .background {
