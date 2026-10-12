@@ -1,121 +1,168 @@
 import AppKit
 
-/// Fish Stack's mark. A fish sits inside the same ring as CommissionAI's compass emblem, so the two
-/// apps read as one family. Geometry is in design units with y pointing down and the nose toward +x.
+/// Fish Stack's mark: two fish turning around a target inside a navy disk. Geometry is normalised so the
+/// disk has radius 1 and y points down. The tail of each fish sits at the top of its arc and its head at the bottom.
 enum FishMark {
-    struct Palette {
-        let body: NSColor
-        let fin: NSColor
+    enum Style {
+        /// Full colour, for the app icon and the popover header.
+        case color
+        /// Black disk with the fish and target cut out, for the menu bar. macOS tints it for the bar.
+        case template
     }
 
-    static let dark = Palette(body: color(0xECE8DF), fin: color(0x6FA8F7))
-    static let mono = Palette(body: .black, fin: .black)
-
-    static let ringRadius: CGFloat = 270
-    static let ringWeight: CGFloat = 34
-    /// Design-space bounds of the whole fish, tail to dorsal fin. Used to centre the menu-bar glyph.
-    static let bounds = CGRect(x: -215, y: -190, width: 415, height: 305)
+    static let spine: CGFloat = 0.52
+    static let halfWidth: CGFloat = 0.12
+    /// The arc runs a little under half a turn, so the tail and the head of each fish sit off the centre line.
+    private static let tailAngle: CGFloat = -.pi / 2 + 0.03
+    private static let span: CGFloat = .pi - 0.33
+    static let fishBlue = color(0x8FD3F7)
+    static let fishWhite = color(0xEEF8FF)
+    static let ink = color(0x0B1A2E)
+    static let diskCenter = color(0x22497A)
+    static let diskEdge = color(0x0B1A2E)
 
     static func color(_ hex: Int) -> NSColor {
         NSColor(srgbRed: CGFloat((hex >> 16) & 0xff) / 255, green: CGFloat((hex >> 8) & 0xff) / 255, blue: CGFloat(hex & 0xff) / 255, alpha: 1)
     }
 
-    static func canvas(center: CGPoint, scale: CGFloat) -> CGAffineTransform {
-        CGAffineTransform(a: scale, b: 0, c: 0, d: -scale, tx: center.x, ty: center.y)
+    static func transform(center: CGPoint, radius: CGFloat) -> CGAffineTransform {
+        CGAffineTransform(a: radius, b: 0, c: 0, d: -radius, tx: center.x, ty: center.y)
     }
 
-    static func body(_ transform: CGAffineTransform) -> CGPath {
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: 200, y: 0), transform: transform)
-        path.addCurve(to: CGPoint(x: -120, y: -36), control1: CGPoint(x: 150, y: -130), control2: CGPoint(x: -10, y: -140), transform: transform)
-        path.addLine(to: CGPoint(x: -120, y: 36), transform: transform)
-        path.addCurve(to: CGPoint(x: 200, y: 0), control1: CGPoint(x: -10, y: 140), control2: CGPoint(x: 150, y: 130), transform: transform)
-        path.closeSubpath()
-        return path
+    /// Angle along the spine for s in 0...1, from the tail (0) over the outside to the head (1).
+    private static func angle(_ s: CGFloat) -> CGFloat {
+        tailAngle - s * span
     }
 
-    static func tail(_ transform: CGAffineTransform) -> CGPath {
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: -100, y: -34), transform: transform)
-        path.addLine(to: CGPoint(x: -215, y: -108), transform: transform)
-        path.addQuadCurve(to: CGPoint(x: -215, y: 108), control: CGPoint(x: -168, y: 0), transform: transform)
-        path.addLine(to: CGPoint(x: -100, y: 34), transform: transform)
-        path.closeSubpath()
-        return path
+    /// Half the body width at s. It is zero at the tail tip and widest at the head.
+    private static func width(_ s: CGFloat) -> CGFloat {
+        halfWidth * pow(sin(.pi * s / 2), 0.75)
     }
 
-    static func dorsal(_ transform: CGAffineTransform) -> CGPath {
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: 55, y: -104), transform: transform)
-        path.addQuadCurve(to: CGPoint(x: -35, y: -178), control: CGPoint(x: 20, y: -200), transform: transform)
-        path.addQuadCurve(to: CGPoint(x: -48, y: -106), control: CGPoint(x: -22, y: -140), transform: transform)
-        path.closeSubpath()
-        return path
+    private static func point(_ s: CGFloat, radius: CGFloat, turned: Bool) -> CGPoint {
+        let a = angle(s)
+        let p = CGPoint(x: radius * cos(a), y: radius * sin(a))
+        return turned ? CGPoint(x: -p.x, y: -p.y) : p
     }
 
-    static func eye(_ transform: CGAffineTransform, radius: CGFloat) -> CGPath {
+    /// One fish, a crescent along the spine with a rounded head. `turned` gives the second fish, rotated half a turn.
+    static func body(turned: Bool, _ transform: CGAffineTransform) -> CGPath {
         let path = CGMutablePath()
-        path.addEllipse(in: CGRect(x: 128 - radius, y: -18 - radius, width: radius * 2, height: radius * 2), transform: transform)
-        return path
-    }
-
-    static func gill(_ transform: CGAffineTransform) -> CGPath {
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: 62, y: -72), transform: transform)
-        path.addQuadCurve(to: CGPoint(x: 62, y: 72), control: CGPoint(x: 40, y: 0), transform: transform)
-        return path
-    }
-
-    static func ring(_ transform: CGAffineTransform) -> CGPath {
-        let path = CGMutablePath()
-        for radius in [ringRadius + ringWeight / 2, ringRadius - ringWeight / 2] {
-            path.addEllipse(in: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2), transform: transform)
+        let steps = 96
+        let caps = 24
+        path.move(to: point(0, radius: spine, turned: turned), transform: transform)
+        for i in 1...steps {
+            let s = CGFloat(i) / CGFloat(steps)
+            path.addLine(to: point(s, radius: spine + width(s), turned: turned), transform: transform)
         }
+        // Round the head: a half circle from the outer edge, over the tip, to the inner edge.
+        let a = angle(1)
+        let normal = CGPoint(x: cos(a), y: sin(a))
+        let forward = CGPoint(x: sin(a), y: -cos(a))
+        let centre = CGPoint(x: spine * normal.x, y: spine * normal.y)
+        let w = width(1)
+        for k in 1..<caps {
+            let theta = CGFloat(k) / CGFloat(caps) * .pi
+            let p = CGPoint(
+                x: centre.x + w * (cos(theta) * normal.x + sin(theta) * forward.x),
+                y: centre.y + w * (cos(theta) * normal.y + sin(theta) * forward.y)
+            )
+            path.addLine(to: turned ? CGPoint(x: -p.x, y: -p.y) : p, transform: transform)
+        }
+        for i in stride(from: steps - 1, through: 0, by: -1) {
+            let s = CGFloat(i) / CGFloat(steps)
+            path.addLine(to: point(s, radius: spine - width(s), turned: turned), transform: transform)
+        }
+        path.closeSubpath()
         return path
     }
 
-    /// Paints the fish onto a transparent canvas. `detailed` adds the gill line and the ring; the
-    /// menu-bar glyph leaves both out because they turn to mud below about 18 points.
-    static func draw(in context: CGContext, center: CGPoint, scale: CGFloat, palette: Palette, detailed: Bool) {
-        let transform = canvas(center: center, scale: scale)
+    static func eye(turned: Bool, _ transform: CGAffineTransform) -> CGPath {
+        let s: CGFloat = 0.86
+        let center = point(s, radius: spine + 0.35 * width(s), turned: turned)
+        let r: CGFloat = 0.042
+        let path = CGMutablePath()
+        path.addEllipse(in: CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2), transform: transform)
+        return path
+    }
+
+    static func targetRing(_ transform: CGAffineTransform) -> CGPath {
+        let path = CGMutablePath()
+        path.addEllipse(in: CGRect(x: -0.24, y: -0.24, width: 0.48, height: 0.48), transform: transform)
+        return path
+    }
+
+    static func targetDot(_ transform: CGAffineTransform) -> CGPath {
+        let path = CGMutablePath()
+        path.addEllipse(in: CGRect(x: -0.1, y: -0.1, width: 0.2, height: 0.2), transform: transform)
+        return path
+    }
+
+    static func disk(_ transform: CGAffineTransform) -> CGPath {
+        let path = CGMutablePath()
+        path.addEllipse(in: CGRect(x: -1, y: -1, width: 2, height: 2), transform: transform)
+        return path
+    }
+
+    /// Paints the mark into `context`, centred on `center` with the disk's radius in points.
+    static func draw(in context: CGContext, center: CGPoint, radius: CGFloat, style: Style) {
+        let t = transform(center: center, radius: radius)
         context.saveGState()
-        context.beginTransparencyLayer(auxiliaryInfo: nil)
-        if detailed {
-            context.setFillColor(palette.body.cgColor)
-            context.addPath(ring(transform))
-            context.fillPath(using: .evenOdd)
-        }
-        // Fins go under the body so their bases tuck in and the join reads as one silhouette.
-        context.setFillColor(palette.fin.cgColor)
-        context.addPath(tail(transform))
-        context.addPath(dorsal(transform))
-        context.fillPath()
-        context.setFillColor(palette.body.cgColor)
-        context.addPath(body(transform))
-        context.fillPath()
-        context.setBlendMode(.clear)
-        context.setFillColor(NSColor.black.cgColor)
-        context.addPath(eye(transform, radius: detailed ? 17 : 26))
-        context.fillPath()
-        if detailed {
-            context.setStrokeColor(NSColor.black.cgColor)
-            context.setLineWidth(9 * scale)
-            context.setLineCap(.round)
-            context.addPath(gill(transform))
+        switch style {
+        case .color:
+            context.addPath(disk(t))
+            context.clip()
+            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [diskCenter.cgColor, diskEdge.cgColor] as CFArray, locations: [0, 1]) {
+                context.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center, endRadius: radius, options: [.drawsAfterEndLocation])
+            }
+            context.setFillColor(fishBlue.cgColor)
+            context.addPath(body(turned: false, t))
+            context.fillPath()
+            context.setFillColor(fishWhite.cgColor)
+            context.addPath(body(turned: true, t))
+            context.fillPath()
+            context.setFillColor(ink.cgColor)
+            context.addPath(eye(turned: false, t))
+            context.addPath(eye(turned: true, t))
+            context.fillPath()
+            context.setStrokeColor(fishWhite.withAlphaComponent(0.45).cgColor)
+            context.setLineWidth(0.035 * radius)
+            context.addPath(targetRing(t))
             context.strokePath()
+            context.setFillColor(fishWhite.withAlphaComponent(0.6).cgColor)
+            context.addPath(targetDot(t))
+            context.fillPath()
+        case .template:
+            context.setFillColor(NSColor.black.cgColor)
+            context.addPath(disk(t))
+            context.fillPath()
+            context.setBlendMode(.clear)
+            context.setFillColor(NSColor.black.cgColor)
+            context.addPath(body(turned: false, t))
+            context.addPath(body(turned: true, t))
+            context.fillPath()
+            context.setStrokeColor(NSColor.black.cgColor)
+            context.setLineWidth(0.035 * radius)
+            context.addPath(targetRing(t))
+            context.strokePath()
+            context.addPath(targetDot(t))
+            context.fillPath()
+            context.setBlendMode(.normal)
+            context.setFillColor(NSColor.black.cgColor)
+            context.addPath(eye(turned: false, t))
+            context.addPath(eye(turned: true, t))
+            context.fillPath()
         }
-        context.setBlendMode(.normal)
-        context.endTransparencyLayer()
         context.restoreGState()
     }
 
-    /// The brand tile image: the full mark with its ring, in colour, for the popover header.
+    /// The brand image for the popover header: the full mark in colour at `side` points.
     static func tile(side: CGFloat) -> NSImage {
         NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
             guard let context = NSGraphicsContext.current?.cgContext else {
                 return false
             }
-            draw(in: context, center: CGPoint(x: rect.midX, y: rect.midY), scale: rect.width * 1.1 / 1024, palette: dark, detailed: true)
+            draw(in: context, center: CGPoint(x: rect.midX, y: rect.midY), radius: rect.width * 0.5, style: .color)
             return true
         }
     }
@@ -132,20 +179,17 @@ enum MarkState: Equatable {
 enum MenuGlyph {
     static let side: CGFloat = 18
 
-    /// `pulse` is 0...1 and only matters while loading, where the fish breathes.
+    /// `pulse` is 0...1 and only matters while loading, where the mark breathes.
     static func image(_ state: MarkState, pulse: CGFloat, attention: Bool) -> NSImage {
         let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
             guard let context = NSGraphicsContext.current?.cgContext else {
                 return false
             }
-            let bounds = FishMark.bounds
-            let scale = min(rect.width * 0.94 / bounds.width, rect.height * 0.8 / bounds.height)
-            let center = CGPoint(x: rect.midX - scale * bounds.midX, y: rect.midY + scale * bounds.midY)
             context.setAlpha(alpha(state, pulse: pulse))
-            FishMark.draw(in: context, center: center, scale: scale, palette: FishMark.mono, detailed: false)
+            FishMark.draw(in: context, center: CGPoint(x: rect.midX, y: rect.midY), radius: 8.4, style: .template)
             context.setAlpha(1)
             if attention {
-                let dot = CGRect(x: rect.maxX - 5.9, y: rect.maxY - 5.9, width: 3.8, height: 3.8)
+                let dot = CGRect(x: rect.maxX - 4.6, y: rect.maxY - 4.6, width: 3.6, height: 3.6)
                 context.setBlendMode(.clear)
                 context.fillEllipse(in: dot.insetBy(dx: -1.1, dy: -1.1))
                 context.setBlendMode(.normal)
@@ -167,7 +211,7 @@ enum MenuGlyph {
     }
 }
 
-/// Renders the app icon at any size from the same geometry as the menu-bar glyph and the header tile.
+/// Renders the app icon at any size from the same mark, on a light squircle plate.
 enum AppIconArt {
     static let sizes: [(name: String, pixels: Int)] = [
         ("icon_16x16", 16), ("icon_16x16@2x", 32), ("icon_32x32", 32), ("icon_32x32@2x", 64),
@@ -200,7 +244,7 @@ enum AppIconArt {
         return rep
     }
 
-    /// Squircle in deep sea teal, the fish mark inside its ring. Coordinates scale with `size`.
+    /// Light squircle plate with the navy disk and the fish at about 70% of its width, like the approved icon.
     static func draw(in context: CGContext, size: CGFloat) {
         let k = size / 1024
         let plate = CGRect(x: 100 * k, y: 100 * k, width: 824 * k, height: 824 * k)
@@ -208,15 +252,16 @@ enum AppIconArt {
         context.saveGState()
         context.addPath(path)
         context.clip()
-        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [FishMark.color(0x1E4657).cgColor, FishMark.color(0x0A1822).cgColor] as CFArray, locations: [0, 1])!
-        context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: plate.maxY), end: CGPoint(x: 0, y: plate.minY), options: [])
+        if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [FishMark.color(0xFBFBF9).cgColor, FishMark.color(0xE9E9E4).cgColor] as CFArray, locations: [0, 1]) {
+            context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: plate.maxY), end: CGPoint(x: 0, y: plate.minY), options: [])
+        }
         context.restoreGState()
         context.saveGState()
         context.addPath(path)
-        context.setStrokeColor(NSColor(white: 1, alpha: 0.1).cgColor)
+        context.setStrokeColor(NSColor(white: 0, alpha: 0.08).cgColor)
         context.setLineWidth(3 * k)
         context.strokePath()
         context.restoreGState()
-        FishMark.draw(in: context, center: CGPoint(x: size / 2, y: size / 2), scale: 1.12 * k, palette: FishMark.dark, detailed: true)
+        FishMark.draw(in: context, center: CGPoint(x: size / 2, y: size / 2), radius: 300 * k, style: .color)
     }
 }
