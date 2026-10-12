@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 416px; background: #F2EFE9; }
+  body {
+    font: 14px/1.35 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    color: #1B1C1F;
+    padding: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card {
+    background: #FFFFFF;
+    border-radius: 22px;
+    padding: 16px;
+  }
+  .wide { grid-column: span 2; }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .mark {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: #1B1C1F; color: #fff;
+    display: grid; place-items: center; font-size: 17px;
+  }
+  .title { font-weight: 650; font-size: 15px; }
+  .sub { color: #7A7D85; font-size: 12px; margin-top: 1px; }
+  .pill {
+    margin-left: auto;
+    background: #DDF3E1; color: #1E7A3A;
+    border-radius: 999px; padding: 4px 10px;
+    font-size: 12px; font-weight: 600;
+  }
+  .mint { background: #D9F2E6; }
+  .peach { background: #FBE3D6; }
+  .lilac { background: #E6E0FA; }
+  .sky { background: #DCEBFB; }
+  .ring-wrap { display: flex; align-items: center; gap: 14px; }
+  .ring {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: conic-gradient(#1B1C1F 0 100%, #E4E2DC 0);
+    display: grid; place-items: center; flex: none;
+  }
+  .ring-inner {
+    width: 66px; height: 66px; border-radius: 50%;
+    background: #fff; display: grid; place-items: center;
+    font-weight: 700; font-size: 20px; letter-spacing: -0.02em;
+  }
+  .ring-inner small { font-size: 11px; color: #7A7D85; font-weight: 500; display: block; text-align: center; margin-top: -4px; }
+  .stat-num { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-label { font-size: 12px; color: #4D5058; margin-top: 2px; }
+  .tile-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tile-ico { font-size: 16px; opacity: .8; }
+  .list { display: grid; gap: 8px; }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; border-radius: 16px; padding: 10px 12px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #2FAE5B; flex: none; }
+  .row-name { font-weight: 600; font-size: 13px; }
+  .row-id { font-size: 11px; color: #7A7D85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+  .row-meta { margin-left: auto; font-size: 12px; color: #4D5058; font-weight: 500; }
+  .footer { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 0; }
+  .muted { color: #7A7D85; font-size: 12px; }
+  .quit {
+    background: #1B1C1F; color: #fff; border-radius: 999px;
+    padding: 7px 14px; font-size: 12px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card wide">
+      <div class="head">
+        <div class="mark">🐟</div>
+        <div>
+          <div class="title">Fish Stack</div>
+          <div class="sub">Local models · v0.1.2</div>
+        </div>
+        <div class="pill">Serving</div>
+      </div>
+    </div>
+
+    <div class="card mint">
+      <div class="ring-wrap" style="flex-direction:column; align-items:flex-start; gap:12px;">
+        <div class="ring">
+          <div class="ring-inner">2<small>/ 2</small></div>
+        </div>
+        <div>
+          <div class="stat-label" style="font-weight:600; color:#1B1C1F;">Models loaded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card peach">
+      <div class="tile-top"><div class="tile-ico">⇄</div></div>
+      <div style="margin-top:22px;">
+        <div class="stat-num">0</div>
+        <div class="stat-label">decisions served</div>
+      </div>
+      <div class="stat-label" style="margin-top:10px; font-size:11px; color:#7A4B33;">embeddings 0 · leases 0</div>
+    </div>
+
+    <div class="card lilac wide" style="padding:12px;">
+      <div class="list">
+        <div class="row" style="background:rgba(255,255,255,.7);">
+          <div class="dot"></div>
+          <div style="min-width:0;">
+            <div class="row-name">Decision</div>
+            <div class="row-id">internlm/Intern-Decision-4B</div>
+          </div>
+          <div class="row-meta">8.4 GB</div>
+        </div>
+        <div class="row" style="background:rgba(255,255,255,.7);">
+          <div class="dot"></div>
+          <div style="min-width:0;">
+            <div class="row-name">Embedding</div>
+            <div class="row-id">mlx-community/bge-small-en-v1.5-4bit</div>
+          </div>
+          <div class="row-meta">20 MB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card sky wide" style="padding:12px 14px;">
+      <div class="footer" style="padding:0;">
+        <div>
+          <div style="font-weight:600;">Add a model</div>
+          <div class="muted">Paste a Hugging Face owner/name</div>
+        </div>
+        <div class="quit">Quit</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer" style="margin-top:10px;">
+    <span class="muted">127.0.0.1:8089 · loopback only</span>
+  </div>
+</body>
+</html>

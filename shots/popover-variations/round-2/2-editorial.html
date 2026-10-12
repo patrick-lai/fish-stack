@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{width:416px;padding:20px;background:#E8E7E2;font-family:-apple-system,"Helvetica Neue",system-ui,sans-serif;color:#131313}
+.p{background:#F7F6F2;padding:22px 22px 18px;border:1px solid #d9d7d0}
+.k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7a786f}
+h1{margin:6px 0 0;font-size:34px;font-weight:600;letter-spacing:-.035em;line-height:1}
+.status{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:600}
+.sq{width:10px;height:10px;background:#131313}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #131313;border-bottom:1px solid #131313;margin:18px 0 0}
+.grid div{padding:12px 0 12px 10px;border-left:1px solid #d9d7d0}
+.grid div:first-child{border-left:0;padding-left:0}
+.n{font-size:44px;font-weight:300;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.l{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a786f;margin-top:6px}
+.sec{margin-top:20px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7a786f;display:flex;justify-content:space-between}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:baseline;padding:12px 0;border-bottom:1px solid #d9d7d0}
+.row .i{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#7a786f}
+.row .nm{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.row .sb{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#7a786f;margin-top:3px}
+.row .st{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.add{margin-top:16px;border-bottom:1px solid #131313;padding:8px 0;font-size:14px;color:#7a786f;display:flex;justify-content:space-between}
+.foot{display:flex;justify-content:space-between;margin-top:16px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#7a786f}
+</style></head><body><div class="p">
+<div class="k">Local models — Port 8089</div>
+<h1>Fish Stack</h1>
+<div class="status"><span class="sq"></span>Serving two models on this Mac</div>
+<div class="grid">
+ <div><div class="n">2</div><div class="l">Loaded / 2</div></div>
+ <div><div class="n">0</div><div class="l">Decisions</div></div>
+ <div><div class="n">0</div><div class="l">Leases</div></div>
+</div>
+<div class="sec"><span>Models</span><span>02</span></div>
+<div class="row"><span class="i">01</span><div><div class="nm">Decision</div><div class="sb">internlm/Intern-Decision-4B</div></div><span class="st">Loaded</span></div>
+<div class="row"><span class="i">02</span><div><div class="nm">Embedding</div><div class="sb">mlx-community/bge-small-en-v1.5-4bit</div></div><span class="st">Loaded</span></div>
+<div class="add"><span>Add model — owner/name or URL</span><span>→</span></div>
+<div class="foot"><span>loopback only</span><span>Quit ⌘Q</span></div>
+</div></body></html>

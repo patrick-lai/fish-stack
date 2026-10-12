@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{width:416px;height:100%;padding:24px;font-family:-apple-system,"SF Pro Rounded",system-ui,sans-serif;color:#fff;
+ background:radial-gradient(circle at 18% 22%,#4a7bd6 0,transparent 42%),radial-gradient(circle at 82% 30%,#c0508a 0,transparent 40%),radial-gradient(circle at 40% 92%,#e8a33c 0,transparent 38%),linear-gradient(160deg,#1b2540,#0d1020);}
+.glass{width:368px;border-radius:26px;padding:20px 20px 16px;background:rgba(40,40,46,.46);-webkit-backdrop-filter:blur(44px) saturate(170%);backdrop-filter:blur(44px) saturate(170%);border:.5px solid rgba(255,255,255,.22);box-shadow:0 24px 60px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)}
+.top{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.06));display:grid;place-items:center;font-size:18px}
+.t{font-size:16px;font-weight:700}.s{font-size:12px;color:rgba(255,255,255,.62)}
+.pill{margin-left:auto;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:rgba(148,220,90,.22);color:#c9f2a2}
+.hero{display:flex;align-items:center;gap:18px;margin:22px 0 18px}
+.big{font-size:52px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.big span{font-size:24px;color:rgba(255,255,255,.5);font-weight:600}
+.cap{font-size:12px;color:rgba(255,255,255,.62);margin-top:6px}
+.spark{margin-left:auto;width:120px;height:52px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.tile{background:rgba(255,255,255,.1);border-radius:16px;padding:12px}
+.tile b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.tile small{font-size:11px;color:rgba(255,255,255,.6)}
+.list{background:rgba(255,255,255,.1);border-radius:18px;padding:4px 14px}
+.it{display:flex;align-items:center;gap:12px;padding:12px 0}.it+.it{border-top:.5px solid rgba(255,255,255,.14)}
+.chip{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:14px}
+.nm{font-size:14px;font-weight:600}.sb{font-size:11.5px;color:rgba(255,255,255,.58);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ok{margin-left:auto;font-size:11.5px;color:#c9f2a2;font-weight:600}
+.add{margin-top:14px;border-radius:14px;padding:11px 14px;background:rgba(255,255,255,.08);font-size:13px;color:rgba(255,255,255,.55);display:flex;justify-content:space-between}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.6)}
+.quit{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12)}
+</style></head><body><div class="glass">
+<div class="top"><div class="logo">🐟</div><div><div class="t">Fish Stack</div><div class="s">Local models · 8,089</div></div><div class="pill">Serving</div></div>
+<div class="hero"><div><div class="big">2<span>/2</span></div><div class="cap">models loaded on this Mac</div></div>
+<svg class="spark" viewBox="0 0 120 52"><path d="M0 44 C 20 40, 30 46, 46 36 S 80 30, 96 24 S 112 18, 120 14" fill="none" stroke="#c9f2a2" stroke-width="2.5" stroke-linecap="round"/><path d="M0 44 C 20 40, 30 46, 46 36 S 80 30, 96 24 S 112 18, 120 14 L120 52 L0 52Z" fill="rgba(201,242,162,.14)"/></svg></div>
+<div class="tiles"><div class="tile"><b>0</b><small>decisions</small></div><div class="tile"><b>0</b><small>embeddings</small></div><div class="tile"><b>0</b><small>leases</small></div></div>
+<div class="list">
+ <div class="it"><div class="chip">◎</div><div style="min-width:0"><div class="nm">Decision</div><div class="sb">internlm/Intern-Decision-4B</div></div><div class="ok">Loaded</div></div>
+ <div class="it"><div class="chip">▦</div><div style="min-width:0"><div class="nm">Embedding</div><div class="sb">mlx-community/bge-small-en-v1.5-4bit</div></div><div class="ok">Loaded</div></div>
+</div>
+<div class="add"><span>Add a Hugging Face model</span><span>＋</span></div>
+<div class="foot"><span>127.0.0.1:8089 · loopback</span><span class="quit">Quit</span></div>
+</div></body></html>

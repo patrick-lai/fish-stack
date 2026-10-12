@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.status { display:flex; align-items:baseline; justify-content:space-between; }
+.status h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-.01em; }
+.strip { display:flex; margin:14px 0 4px; }
+.strip > div { flex:1; padding:10px 0; }
+.strip > div + div { border-left:1px solid rgba(255,255,255,.07); padding-left:14px; }
+.strip .big { font-size:20px; }
+table { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+td { padding:9px 0; border-top:1px solid rgba(255,255,255,.07); vertical-align:middle; }
+td.role { color:rgba(214,215,218,.45); width:70px; }
+td.state { text-align:right; }
+td.mem { text-align:right; color:rgba(214,215,218,.45); font-variant-numeric:tabular-nums; padding-right:10px; }
+.addbar { display:flex; gap:8px; margin-top:14px; }
+.addbar .in { flex:1; background:rgba(255,255,255,.045); border-radius:10px; padding:9px 12px; font-size:12px; color:rgba(214,215,218,.45); }
+.addbar .btn { background:rgba(102,157,241,.16); color:#8FB8F6; border-radius:10px; padding:9px 14px; font-size:12px; font-weight:600; }
+.rows { margin-top:8px; }
+.r { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid rgba(255,255,255,.07); font-size:12px; }
+.r .role { width:78px; flex:none; color:rgba(214,215,218,.45); }
+.r .nm { flex:1; min-width:0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.r .state { flex:none; }
+</style></head><body><div class="panel">
+<div class="status"><div><div class="label">Fish Stack · 0.1.2</div><h1>Serving</h1></div><span class="mono" style="font-size:12px">port 8089</span></div>
+<div class="strip">
+ <div><div class="label">Loaded</div><div class="big">2/2</div></div>
+ <div><div class="label">Decisions</div><div class="big">0</div></div>
+ <div><div class="label">Embeddings</div><div class="big">0</div></div>
+ <div><div class="label">Leases</div><div class="big">0</div></div>
+</div>
+<div class="rows">
+ <div class="r"><span class="role">Decision</span><span class="nm">internlm/Intern-Decision-4B</span><span class="state"><span class="tag">Loaded</span></span></div>
+ <div class="r"><span class="role">Embedding</span><span class="nm">mlx-community/bge-small-en-v1.5-4bit</span><span class="state"><span class="tag">Loaded</span></span></div>
+</div>
+<div class="addbar"><div class="in">owner/name or Hugging Face URL</div><div class="btn">Add model</div></div>
+<div class="foot"><span class="mono">loopback only</span><span class="quit">⏻ Quit</span></div>
+</div></body></html>

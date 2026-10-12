@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 416px; background: #000; }
+  body {
+    font: 14px/1.4 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    color: #E7E9EA;
+    padding: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    background: #000;
+    border: 1px solid #2F3336;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .hero {
+    position: relative;
+    padding: 26px 20px 22px;
+    text-align: center;
+    background: radial-gradient(120% 90% at 50% 0%, #0D2A4A 0%, #000 65%);
+  }
+  .orb {
+    width: 72px; height: 72px; border-radius: 50%;
+    margin: 0 auto;
+    background: radial-gradient(circle at 35% 30%, #CFE6FF 0%, #5B9CF5 38%, #1D4FA8 75%, #0A1F44 100%);
+    box-shadow: 0 0 36px rgba(91,156,245,.55), 0 0 2px rgba(255,255,255,.4) inset;
+    display: grid; place-items: center;
+    font-size: 30px;
+  }
+  .state { margin-top: 14px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { color: #8B98A5; font-size: 13px; margin-top: 3px; }
+  .count {
+    display: inline-block; margin-top: 12px;
+    padding: 5px 12px; border-radius: 999px;
+    border: 1px solid #2F3336; font-size: 12px; color: #8B98A5;
+  }
+  .count b { color: #E7E9EA; font-weight: 600; }
+  .section-h {
+    padding: 14px 20px 6px;
+    font-size: 12px; color: #71767B; font-weight: 600; letter-spacing: .02em;
+  }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid #2F3336;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #16181C; border: 1px solid #2F3336;
+    display: grid; place-items: center; font-size: 14px;
+    flex: none;
+  }
+  .name { font-weight: 600; font-size: 14px; }
+  .id { color: #71767B; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+  .ok { margin-left: auto; color: #5B9CF5; font-size: 12px; font-weight: 600; }
+  .stats {
+    display: flex; justify-content: space-around;
+    padding: 14px 20px;
+    border-top: 1px solid #2F3336;
+  }
+  .stat { text-align: center; }
+  .stat .n { font-size: 18px; font-weight: 700; }
+  .stat .l { font-size: 11px; color: #71767B; margin-top: 1px; }
+  .add {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-top: 1px solid #2F3336;
+    color: #71767B; font-size: 13px;
+  }
+  .foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 20px; border-top: 1px solid #2F3336;
+    color: #71767B; font-size: 12px;
+  }
+  .quit { color: #F4212E; font-weight: 600; font-size: 13px; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="hero">
+      <div class="orb">🐟</div>
+      <div class="state">Fish Stack is serving</div>
+      <div class="sub">Two models answering on this Mac</div>
+      <div class="count"><b>2</b> of 2 loaded</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">0</div><div class="l">decisions</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">embeddings</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">leases</div></div>
+    </div>
+
+    <div class="section-h">Models</div>
+    <div class="item">
+      <div class="avatar">◉</div>
+      <div style="min-width:0;">
+        <div class="name">Decision</div>
+        <div class="id">internlm/Intern-Decision-4B</div>
+      </div>
+      <div class="ok">Loaded</div>
+    </div>
+    <div class="item">
+      <div class="avatar">▦</div>
+      <div style="min-width:0;">
+        <div class="name">Embedding</div>
+        <div class="id">mlx-community/bge-small-en-v1.5-4bit</div>
+      </div>
+      <div class="ok">Loaded</div>
+    </div>
+
+    <div class="add">
+      <span>Add a Hugging Face model</span>
+      <span style="color:#5B9CF5; font-size:18px;">+</span>
+    </div>
+    <div class="foot">
+      <span>127.0.0.1:8089 · loopback</span>
+      <span class="quit">Quit</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 416px; background: #FFE14D; }
+  body {
+    font: 14px/1.3 -apple-system, "SF Pro Display", system-ui, sans-serif;
+    color: #0C0C0C;
+    padding: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .panel {
+    background: #FFFDF6;
+    border: 2.5px solid #0C0C0C;
+    border-radius: 14px;
+    box-shadow: 6px 6px 0 #0C0C0C;
+    overflow: hidden;
+  }
+  .top {
+    background: #0C0C0C; color: #FFE14D;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; }
+  .status {
+    background: #3DDC84; color: #0C0C0C; border: 2px solid #0C0C0C;
+    border-radius: 8px; padding: 3px 8px; font-weight: 800; font-size: 12px; text-transform: uppercase;
+  }
+  .hero {
+    padding: 16px;
+    border-bottom: 2.5px solid #0C0C0C;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .big { font-size: 74px; font-weight: 900; line-height: .85; letter-spacing: -0.05em; }
+  .big span { font-size: 30px; color: #6B6B6B; letter-spacing: -0.02em; }
+  .hero-note { font-weight: 700; font-size: 13px; text-align: right; max-width: 150px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 2.5px solid #0C0C0C; }
+  .stat { padding: 12px; border-right: 2.5px solid #0C0C0C; }
+  .stat:last-child { border-right: none; }
+  .stat .n { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+  .stat .l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+  .stat.pink { background: #FF9ECF; }
+  .stat.blue { background: #8EC5FF; }
+  .stat.white { background: #FFFDF6; }
+  .models { padding: 6px 0; }
+  .model {
+    display: grid; grid-template-columns: 38px 1fr auto; gap: 10px; align-items: center;
+    padding: 10px 16px;
+  }
+  .model + .model { border-top: 2px solid #0C0C0C; }
+  .ico {
+    width: 38px; height: 38px; border: 2px solid #0C0C0C; border-radius: 10px;
+    display: grid; place-items: center; font-weight: 900; font-size: 15px;
+  }
+  .m-name { font-weight: 800; font-size: 15px; }
+  .m-id { font-size: 11px; color: #4A4A4A; font-family: ui-monospace, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 230px; }
+  .tag {
+    border: 2px solid #0C0C0C; border-radius: 999px; padding: 2px 9px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; background: #FFE14D;
+  }
+  .footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-top: 2.5px solid #0C0C0C; background: #F3EDDD;
+  }
+  .addbtn {
+    border: 2.5px solid #0C0C0C; border-radius: 10px; padding: 7px 12px;
+    font-weight: 800; font-size: 13px; background: #FFFDF6; box-shadow: 3px 3px 0 #0C0C0C;
+  }
+  .quitbtn {
+    border: 2.5px solid #0C0C0C; border-radius: 10px; padding: 7px 12px;
+    font-weight: 800; font-size: 13px; background: #FF6B5B; box-shadow: 3px 3px 0 #0C0C0C;
+  }
+  .addr { font-size: 11px; font-weight: 700; margin-top: 10px; text-align: right; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="top">
+      <div class="brand">Fish Stack</div>
+      <div class="status">● Live</div>
+    </div>
+
+    <div class="hero">
+      <div class="big">2<span>/2</span></div>
+      <div class="hero-note">models loaded on this Mac. Nothing leaves your machine.</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat pink"><div class="n">0</div><div class="l">Decisions</div></div>
+      <div class="stat blue"><div class="n">0</div><div class="l">Embeds</div></div>
+      <div class="stat white"><div class="n">0</div><div class="l">Leases</div></div>
+    </div>
+
+    <div class="models">
+      <div class="model">
+        <div class="ico" style="background:#FF9ECF;">D</div>
+        <div style="min-width:0;">
+          <div class="m-name">Decision</div>
+          <div class="m-id">internlm/Intern-Decision-4B</div>
+        </div>
+        <div class="tag">Loaded</div>
+      </div>
+      <div class="model">
+        <div class="ico" style="background:#8EC5FF;">E</div>
+        <div style="min-width:0;">
+          <div class="m-name">Embedding</div>
+          <div class="m-id">mlx-community/bge-small-en-v1.5-4bit</div>
+        </div>
+        <div class="tag">Loaded</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="addbtn">+ Add model</div>
+      <div class="quitbtn">Quit</div>
+    </div>
+  </div>
+  <div class="addr">127.0.0.1:8089 · loopback</div>
+</body>
+</html>

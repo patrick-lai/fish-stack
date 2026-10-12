@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.top { display:flex; align-items:center; gap:10px; }
+.seg { display:flex; background:rgba(255,255,255,.045); border-radius:10px; padding:3px; margin:16px 0 14px; }
+.seg div { flex:1; text-align:center; font-size:12px; padding:6px 0; border-radius:8px; color:rgba(214,215,218,.5); }
+.seg div.on { background:rgba(255,255,255,.1); color:#D6D7DA; font-weight:600; }
+.card { background:rgba(255,255,255,.045); border-radius:12px; padding:4px 14px; }
+.model { display:flex; align-items:center; gap:12px; padding:12px 0; }
+.model + .model { border-top:1px solid rgba(255,255,255,.07); }
+.bar { height:3px; border-radius:3px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:8px; }
+.bar i { display:block; height:100%; width:100%; background:#94C748; border-radius:3px; }
+.big { font-size:26px; font-weight:600; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+.glance { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.glance > div { background:rgba(255,255,255,.045); border-radius:12px; padding:10px 12px; }
+.glance .sub { margin-top:2px; }
+</style></head><body><div class="panel">
+<div class="top"><div class="ico" style="width:34px;height:34px;font-size:16px">◉</div><div class="grow"><div class="title" style="font-size:15px;font-weight:600">Fish Stack</div><div class="sub">Serving 2 models on this Mac</div></div><span class="pill"><span class="dot"></span>Serving</span></div>
+<div class="seg"><div class="on">Models</div><div>Library · 2</div><div>Add</div></div>
+<div class="glance">
+ <div><div class="label">Decisions</div><div class="big">0</div></div>
+ <div><div class="label">Embeddings</div><div class="big">0</div></div>
+ <div><div class="label">Leases</div><div class="big">0</div></div>
+</div>
+<div class="card">
+ <div class="model"><div class="ico">◎</div><div class="grow"><div class="name">Decision</div><div class="sub">internlm/Intern-Decision-4B</div></div><span class="tag">Loaded</span></div>
+ <div class="model"><div class="ico">▦</div><div class="grow"><div class="name">Embedding</div><div class="sub">mlx-community/bge-small-en-v1.5-4bit</div></div><span class="tag">Loaded</span></div>
+</div>
+<div class="foot"><span class="mono">127.0.0.1:8089 · loopback only</span><span class="quit">⏻ Quit</span></div>
+</div></body></html>

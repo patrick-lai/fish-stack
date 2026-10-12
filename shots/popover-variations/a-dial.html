@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.head { display:flex; align-items:center; gap:10px; }
+.title { font-size:15px; font-weight:600; }
+.hero { display:flex; gap:18px; align-items:center; margin:18px 0 6px; }
+.dial { width:92px; height:92px; flex:none; position:relative; }
+.dial svg { position:absolute; inset:0; }
+.dial .n { position:absolute; inset:0; display:grid; place-items:center; text-align:center; font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+.dial .n small { display:block; font-size:10px; font-weight:400; color:rgba(214,215,218,.45); margin-top:-4px; }
+.stats { flex:1; }
+.stat { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:13px; }
+.stat:last-child { border-bottom:0; }
+.stat b { font-variant-numeric:tabular-nums; font-weight:600; }
+.list { margin-top:16px; }
+.list .item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.list .item:last-child { border-bottom:0; }
+.add { margin-top:16px; background:rgba(255,255,255,.045); border-radius:12px; padding:11px 12px; font-size:12px; color:rgba(214,215,218,.45); display:flex; justify-content:space-between; }
+.add b { color:#8FB8F6; font-weight:600; }
+</style></head><body><div class="panel">
+<div class="head"><div class="ico" style="width:34px;height:34px;font-size:16px">◉</div><div class="grow"><div class="title">Fish Stack</div><div class="sub">Local models · port 8,089</div></div><span class="pill"><span class="dot"></span>Serving</span></div>
+<div class="hero">
+ <div class="dial"><svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="41" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5"/><circle cx="46" cy="46" r="41" fill="none" stroke="#94C748" stroke-width="5" stroke-linecap="round" stroke-dasharray="257.6 257.6" transform="rotate(-90 46 46)"/></svg><div class="n">2/2<small>loaded</small></div></div>
+ <div class="stats">
+  <div class="stat"><span class="muted">Decisions served</span><b>0</b></div>
+  <div class="stat"><span class="muted">Embeddings served</span><b>0</b></div>
+  <div class="stat"><span class="muted">Live leases</span><b>0</b></div>
+ </div>
+</div>
+<div class="list">
+ <div class="label" style="margin-bottom:4px">Models</div>
+ <div class="item"><div class="ico">◎</div><div class="grow"><div class="name">Decision</div><div class="sub">internlm/Intern-Decision-4B</div></div><span class="tag">Loaded</span></div>
+ <div class="item"><div class="ico">▦</div><div class="grow"><div class="name">Embedding</div><div class="sub">mlx-community/bge-small-en-v1.5-4bit</div></div><span class="tag">Loaded</span></div>
+</div>
+<div class="add"><span>Paste a Hugging Face URL or owner/name</span><b>Add</b></div>
+<div class="foot"><span class="mono">127.0.0.1:8089 · loopback</span><span class="quit">⏻ Quit</span></div>
+</div></body></html>
