@@ -2,12 +2,12 @@ import json
 import os
 from pathlib import Path
 
-DEFAULT_HOME = "~/.patelier"
+DEFAULT_HOME = "~/.fishStack"
 
 
 def home(override=None):
-    """The pAtelier home that CommissionAI reads. fish-stack replaces pAtelier, so it uses the same place."""
-    return Path(override or os.environ.get("PATELIER_HOME") or DEFAULT_HOME).expanduser()
+    """The FishStack home where run/daemon.json is published and CommissionAI reads it."""
+    return Path(override or os.environ.get("FISH_STACK_HOME") or DEFAULT_HOME).expanduser()
 
 
 def daemon_file(root):
@@ -15,7 +15,7 @@ def daemon_file(root):
 
 
 def publish(root, pid, port):
-    """Write run/daemon.json the way pAtelier does, so CommissionAI finds this server."""
+    """Write run/daemon.json, the record CommissionAI reads to find this server."""
     directory = root / "run"
     directory.mkdir(parents=True, exist_ok=True)
     target = daemon_file(root)

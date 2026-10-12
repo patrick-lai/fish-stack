@@ -8,6 +8,7 @@ identity=${FISH_STACK_SIGN_IDENTITY:?set FISH_STACK_SIGN_IDENTITY to your Develo
 key_id=${ASC_KEY_ID:?set ASC_KEY_ID to the App Store Connect key id}
 issuer=${ASC_ISSUER_ID:?set ASC_ISSUER_ID to the App Store Connect issuer id}
 key_path=${ASC_KEY_PATH:-$HOME/.appstoreconnect/private_keys/AuthKey_$key_id.p8}
+base_url=${FISH_STACK_BASE_URL:-https://commissionai.app/fish-stack}
 
 "$root/scripts/build-app.sh" >/dev/null
 app="$root/build/FishStack.app"
@@ -42,7 +43,10 @@ cat > "$dist/latest.json" <<JSON
   "sha256": "$sha",
   "bytes": $size,
   "notarized": true,
-  "team": "$(printf '%s' "$identity" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')"
+  "team": "$(printf '%s' "$identity" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')",
+  "url": "$base_url/$name",
+  "minimum_macos": "14.0",
+  "architecture": "arm64"
 }
 JSON
 echo "$zip"

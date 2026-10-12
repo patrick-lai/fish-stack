@@ -42,7 +42,7 @@ def serve(args):
     server = make_server(HOST, args.port, service, state.api_key())
     port = server.server_address[1]
     service.origin = "http://%s:%d" % (HOST, port)
-    root = discovery.home(args.patelier_home)
+    root = discovery.home(args.home)
     discovery.publish(root, os.getpid(), port)
 
     def stop():
@@ -65,7 +65,7 @@ def main(argv=None):
     serve_parser = commands.add_parser("serve", help="run the model server on 127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8089)
     serve_parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE_DIR)
-    serve_parser.add_argument("--patelier-home", type=Path, default=None, help="where run/daemon.json is written (default: $PATELIER_HOME or ~/.patelier)")
+    serve_parser.add_argument("--home", type=Path, default=None, help="where run/daemon.json is written (default: $FISH_STACK_HOME or ~/.fishStack)")
     args = parser.parse_args(argv)
     if args.command == "serve":
         serve(args)

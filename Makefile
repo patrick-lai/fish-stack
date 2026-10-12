@@ -13,7 +13,7 @@ app-test:
 app:
 	scripts/build-app.sh
 
-# Serves on the dev port with state and the pAtelier-style lease home inside the worktree,
-# so nothing touches ~/Library or the real ~/.patelier that CommissionAI reads.
+# Serves on the dev port with state and the run/daemon.json home inside the worktree,
+# so nothing touches ~/Library or the real ~/.fishStack that CommissionAI reads.
 run-dev:
-	cd runtime && exec .venv/bin/python -m fishd serve --port $${COMMISSION_DEV_PORT:-20880} --state-dir "$(CURDIR)/state-dev" --patelier-home "$(CURDIR)/state-dev/patelier"
+	cd runtime && exec .venv/bin/python -m fishd serve --port $${COMMISSION_DEV_PORT:-20880} --state-dir "$(CURDIR)/state-dev" --home "$(CURDIR)/state-dev/fishStack"

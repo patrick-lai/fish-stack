@@ -59,7 +59,7 @@ class DiscoveryTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name) / "patelier"
+        self.root = Path(temp.name) / "fishStack"
 
     def test_publish_writes_the_record_commission_reads(self):
         discovery.publish(self.root, 4242, 8089)
@@ -81,13 +81,13 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue((self.root / "run" / "daemon.json").exists())
 
     def test_home_prefers_the_argument_then_the_environment(self):
-        previous = os.environ.get("PATELIER_HOME")
-        self.addCleanup(lambda: os.environ.pop("PATELIER_HOME", None) if previous is None else os.environ.__setitem__("PATELIER_HOME", previous))
-        os.environ["PATELIER_HOME"] = "/tmp/from-env"
+        previous = os.environ.get("FISH_STACK_HOME")
+        self.addCleanup(lambda: os.environ.pop("FISH_STACK_HOME", None) if previous is None else os.environ.__setitem__("FISH_STACK_HOME", previous))
+        os.environ["FISH_STACK_HOME"] = "/tmp/from-env"
         self.assertEqual(discovery.home(), Path("/tmp/from-env"))
         self.assertEqual(discovery.home("/tmp/from-arg"), Path("/tmp/from-arg"))
-        os.environ.pop("PATELIER_HOME")
-        self.assertEqual(discovery.home(), Path.home() / ".patelier")
+        os.environ.pop("FISH_STACK_HOME")
+        self.assertEqual(discovery.home(), Path.home() / ".fishStack")
 
 
 if __name__ == "__main__":
