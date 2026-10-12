@@ -135,14 +135,14 @@ class ServerTests(unittest.TestCase):
 
     def test_a_lease_waits_for_the_decision_model_then_opens_the_decision_route(self):
         wait_until(lambda: self.model("owner--decision@r1").get("state") == "ready")
-        request = {"schema": "patelier.lease-request/1", "product": "commission", "purpose": "classify", "ttl_s": 120, "protocol": "jev-systemone"}
+        request = {"schema": "fishstack.lease-request/1", "product": "commission", "purpose": "classify", "ttl_s": 120, "protocol": "jev-systemone"}
         status, data = self.call("POST", "/v1/leases", request, auth=False)
-        self.assertEqual((status, data["schema"], data["code"]), (503, "patelier.error/1", "decision.warming"))
+        self.assertEqual((status, data["schema"], data["code"]), (503, "fishstack.error/1", "decision.warming"))
         self.assertGreater(data["retry_after_s"], 0)
         wait_until(lambda: self.health()["roles"]["decision"]["loaded"])
         status, lease = self.call("POST", "/v1/leases", request, auth=False)
         self.assertEqual(status, 200)
-        self.assertEqual(lease["schema"], "patelier.lease/1")
+        self.assertEqual(lease["schema"], "fishstack.lease/1")
         self.assertEqual(lease["base_url"], "http://127.0.0.1:%d" % self.port)
         self.assertEqual(lease["protocol"], "jev-systemone")
         self.assertRegex(lease["lease_id"], r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
@@ -169,7 +169,7 @@ class ServerTests(unittest.TestCase):
         status, _ = self.call("POST", "/v1/systemone", {"state": "x", "questions": {"t": {"type": "noul"}}}, token=lease["api_key"])
         self.assertEqual(status, 401)
         status, data = self.call("PUT", "/v1/leases/" + lease["lease_id"], auth=False)
-        self.assertEqual((status, data["code"]), (404, "patelier.not_found"))
+        self.assertEqual((status, data["code"]), (404, "fishstack.not_found"))
 
     def test_each_served_decision_is_logged_with_the_key_that_opened_it(self):
         lines = []
@@ -195,7 +195,7 @@ class ServerTests(unittest.TestCase):
 
     def test_a_lease_for_another_protocol_is_refused(self):
         status, data = self.call("POST", "/v1/leases", {"protocol": "other"}, auth=False)
-        self.assertEqual((status, data["code"]), (422, "patelier.invalid"))
+        self.assertEqual((status, data["code"]), (422, "fishstack.invalid"))
 
     def model(self, key):
         return next((item for item in self.call("GET", "/v1/models")[1]["data"] if item["id"] == key), {})

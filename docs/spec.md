@@ -18,7 +18,7 @@ Fish Stack is a native macOS menu-bar app. It runs a local model server (`fishd`
 
 ## Lease home
 
-fish-stack serves CommissionAI directly, without pAtelier. On start it writes `run/daemon.json` (`{"pid", "port"}`) under its home: `--home`, else `$FISH_STACK_HOME`, else `~/.fishStack`. CommissionAI's local JEV reads that record, leases the decision endpoint with `POST /v1/leases`, verifies it with its billing smoke test, renews it at half-life and releases it on shutdown. If the lease is not granted, CommissionAI falls back to its own `jev-local` runtime, as before. The record is removed on quit, and on SIGTERM. `make run-dev` writes into `state-dev/fishStack`, so the dev server never takes over the real home.
+fish-stack serves CommissionAI directly. On start it writes `run/daemon.json` (`{"pid", "port"}`) under its home: `--home`, else `$FISH_STACK_HOME`, else `~/.fishStack`. CommissionAI's local JEV reads that record, leases the decision endpoint with `POST /v1/leases`, verifies it with its billing smoke test, renews it at half-life and releases it on shutdown. If the lease is not granted, CommissionAI falls back to its own `jev-local` runtime, as before. The record is removed on quit, and on SIGTERM. `make run-dev` writes into `state-dev/fishStack`, so the dev server never takes over the real home.
 
 CommissionAI also has a loopback endpoint setting, `COMMISSION_JEV_LOCAL_ENDPOINT` with `COMMISSION_JEV_LOCAL_KEY_FILE`, which it tries before the lease. Every served request is logged with its route, status and the key that opened it (`master key` or `lease`).
 
@@ -37,7 +37,7 @@ Listens on `127.0.0.1` only. Every route except `GET /health` and the lease rout
 | --- | --- |
 | `GET /health` | Protocol version, role states, whether each engine is loaded, and `activity` counts since start (`decisions`, `embeddings`, `leases`). |
 | `POST /v1/systemone` | Decision requests. Same request and response shape as `jev-local` (protocol 1). Accepts the master key or a live lease key. |
-| `POST /v1/leases` | Lease for `protocol: "jev-systemone"` in the pAtelier wire format CommissionAI already speaks. Returns `patelier.lease/1` with `lease_id`, `base_url`, `api_key` and `expires_at`. Answers 503 with a `patelier.error/1` envelope while the decision model loads, and never blocks on the load. |
+| `POST /v1/leases` | Lease for `protocol: "jev-systemone"`. Returns `fishstack.lease/1` with `lease_id`, `base_url`, `api_key` and `expires_at`. Answers 503 with a `fishstack.error/1` envelope while the decision model loads, and never blocks on the load. |
 | `PUT /v1/leases/{id}` | Renews a lease. The key stays the same and the expiry moves forward. 404 once the lease has expired or been released. |
 | `DELETE /v1/leases/{id}` | Releases a lease and revokes its key at once. |
 | `POST /v1/embeddings` | `{"input": string or [string], "model"?: string}` returns `{"object":"list","data":[{"index","embedding"}],"model","usage"}`. |

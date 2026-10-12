@@ -1,7 +1,7 @@
 class Refused(Exception):
     """A request the server answers with a status code and a user-safe detail.
 
-    Pass ``code`` to answer with the pAtelier error envelope instead of ``detail`` alone.
+    Pass ``code`` to answer with the fishstack error envelope instead of ``detail`` alone.
     """
 
     def __init__(self, status, detail, code=None, retry_after=None):

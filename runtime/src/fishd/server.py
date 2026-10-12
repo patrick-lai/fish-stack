@@ -16,7 +16,7 @@ log = logging.getLogger("fishd")
 
 def error_envelope(refused):
     return {
-        "schema": "patelier.error/1",
+        "schema": "fishstack.error/1",
         "code": refused.code,
         "class": "recoverable" if refused.status >= 500 else "permanent",
         "message": refused.detail,
@@ -72,7 +72,7 @@ def make_server(host, port, service, api_key):
         def dispatch(self, method):
             if method == "GET" and self.path == "/health":
                 return self.reply(200, service.health())
-            # Leases are the pAtelier-compatible handout. Like pAtelier, they are reached over loopback
+            # Leases are the handout CommissionAI calls. They are reached over loopback
             # only (the server binds 127.0.0.1), and the lease id is the only credential for renew and release.
             if method == "POST" and self.path == "/v1/leases":
                 return self.reply(200, service.lease(self.read_json()))

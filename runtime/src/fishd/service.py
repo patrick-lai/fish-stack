@@ -120,9 +120,9 @@ class Service:
         return answers
 
     def lease(self, body):
-        """Issue a pAtelier-style decision lease. Answers fast; never waits for a model load."""
+        """Issue a decision lease. Answers fast; never waits for a model load."""
         if not isinstance(body, dict) or body.get("protocol") != LEASE_PROTOCOL:
-            raise Refused(422, "protocol must be %s" % LEASE_PROTOCOL, code="patelier.invalid")
+            raise Refused(422, "protocol must be %s" % LEASE_PROTOCOL, code="fishstack.invalid")
         self._ready_engine("decision")
         lease_id, key, expires = self.leases.issue(body.get("ttl_s"))
         return self._lease_record(lease_id, key, expires)
@@ -130,13 +130,13 @@ class Service:
     def renew_lease(self, lease_id):
         renewed = self.leases.renew(lease_id)
         if renewed is None:
-            raise Refused(404, "No live lease with that id.", code="patelier.not_found")
+            raise Refused(404, "No live lease with that id.", code="fishstack.not_found")
         key, expires = renewed
         return self._lease_record(lease_id, key, expires)
 
     def _lease_record(self, lease_id, key, expires):
         return {
-            "schema": "patelier.lease/1",
+            "schema": "fishstack.lease/1",
             "lease_id": lease_id,
             "base_url": self.origin,
             "model": self.state.config()["decision"]["repo"],
@@ -147,7 +147,7 @@ class Service:
 
     def release_lease(self, lease_id):
         if not self.leases.release(lease_id):
-            raise Refused(404, "No live lease with that id.", code="patelier.not_found")
+            raise Refused(404, "No live lease with that id.", code="fishstack.not_found")
 
     def accepts_lease(self, key):
         return self.leases.accepts(key)

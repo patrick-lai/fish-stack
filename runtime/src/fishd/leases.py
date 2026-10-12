@@ -10,7 +10,7 @@ DEFAULT_TTL_S = 120
 
 
 class Leases:
-    """Short-lived decision keys handed to CommissionAI in place of pAtelier leases.
+    """Short-lived decision keys handed to CommissionAI for CommissionAI's lease calls.
 
     A lease key only opens the decision route, and it stops working when the
     lease expires or is released. The master key never leaves the state folder.
