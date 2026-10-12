@@ -52,6 +52,9 @@ cat > "$dist/latest.json" <<JSON
   "architecture": "arm64"
 }
 JSON
+# The download page is rendered from web/download with this release's version and checksum.
+sed -e "s/{{VERSION}}/$version/g" -e "s/{{SHA256}}/$sha/g" "$root/web/download/index.html" > "$dist/index.html"
+
 echo "$zip"
 cat "$dist/latest.json"
 

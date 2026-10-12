@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fish Stack</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #18191B; color: #D6D7DA; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
+  main { width: min(440px, 88vw); }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+  p { margin: 0 0 22px; color: rgba(214,215,218,.6); }
+  a.button { display: inline-block; padding: 10px 16px; border-radius: 10px; background: rgba(102,157,241,.2); color: #8FB8F6; text-decoration: none; font-weight: 500; }
+  a.button:hover { background: rgba(102,157,241,.3); }
+  .meta { margin-top: 22px; font-size: 12px; color: rgba(214,215,218,.45); }
+  .meta a { color: inherit; }
+  code { font-size: 12px; word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Fish Stack</h1>
+  <p>Local models for your Mac. Notarized by Apple for macOS 14 and later on Apple silicon. It sets itself up on first launch and needs internet for that and for the model downloads.</p>
+  <a class="button" href="FishStack-{{VERSION}}.zip">Download FishStack {{VERSION}}</a>
+  <div class="meta">
+    <a href="https://github.com/patrick-lai/fish-stack/releases/tag/v{{VERSION}}">Backup on GitHub Releases</a><br>
+    SHA-256 <code>{{SHA256}}</code><br>
+    <a href="latest.json">Release manifest</a>
+  </div>
+</main>
+</body>
+</html>
