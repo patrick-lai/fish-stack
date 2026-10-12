@@ -46,6 +46,8 @@ class Service:
         self._warm_lock = threading.Lock()
         self._load_lock = threading.Lock()
         self._gates = {role: threading.Lock() for role in ROLES}
+        self._served = {"decision": 0, "embedding": 0}
+        self._served_lock = threading.Lock()
 
     def start(self):
         config = self.state.config()
@@ -67,7 +69,10 @@ class Service:
         for role in ROLES:
             entry = config[role]
             roles[role] = {"model": entry["repo"], "revision": entry["revision"], "state": self._state_of(config_key(entry)), "loaded": role in self._engines}
-        return {"status": "ok", "protocol": PROTOCOL, "version": VERSION, "roles": roles}
+        with self._served_lock:
+            served = dict(self._served)
+        activity = {"decisions": served["decision"], "embeddings": served["embedding"], "leases": self.leases.active()}
+        return {"status": "ok", "protocol": PROTOCOL, "version": VERSION, "roles": roles, "activity": activity}
 
     def models(self):
         config = self.state.config()
@@ -110,7 +115,9 @@ class Service:
         state, questions = parse_request(body)
         engine = self._engine("decision")
         with self._gates["decision"]:
-            return engine.decide(state, questions)
+            answers = engine.decide(state, questions)
+        self._count("decision")
+        return answers
 
     def lease(self, body):
         """Issue a pAtelier-style decision lease. Answers fast; never waits for a model load."""
@@ -182,12 +189,17 @@ class Service:
             raise Refused(400, "model must be %s or omitted" % engine.name)
         with self._gates["embedding"]:
             vectors, tokens = engine.embed(texts)
+        self._count("embedding")
         return {
             "object": "list",
             "model": engine.name,
             "data": [{"object": "embedding", "index": index, "embedding": vector} for index, vector in enumerate(vectors)],
             "usage": {"prompt_tokens": tokens, "total_tokens": tokens},
         }
+
+    def _count(self, role):
+        with self._served_lock:
+            self._served[role] += 1
 
     def _engine(self, role):
         with self._load_lock:

@@ -49,6 +49,10 @@ final class FishServer {
         client = FishClient(port: config.port, keyFile: config.stateDir.appendingPathComponent("api-key"))
     }
 
+    var port: Int { config.port }
+    var stateURL: URL { config.stateDir }
+    var logsURL: URL { config.stateDir.appendingPathComponent("logs", isDirectory: true) }
+
     func start() {
         guard supervisor == nil else { return }
         supervisor = Task { await supervise() }
@@ -118,10 +122,6 @@ final class FishServer {
 
     private var venvURL: URL {
         config.stateDir.appendingPathComponent("venv", isDirectory: true)
-    }
-
-    private var logsURL: URL {
-        config.stateDir.appendingPathComponent("logs", isDirectory: true)
     }
 
     private func prepareRuntime() async throws {

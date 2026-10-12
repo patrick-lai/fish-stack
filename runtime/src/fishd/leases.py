@@ -48,6 +48,11 @@ class Leases:
             self._prune()
             return any(hmac.compare_digest(key.encode(), lease["key"].encode()) for lease in self._leases.values())
 
+    def active(self):
+        with self._lock:
+            self._prune()
+            return len(self._leases)
+
     def _prune(self):
         now = self._clock()
         for lease_id in [lease_id for lease_id, lease in self._leases.items() if lease["expires"] <= now]:

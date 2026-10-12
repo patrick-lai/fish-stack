@@ -154,6 +154,9 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(data["answers"], {"t": {"type": "noul", "noul": 0.9}})
         status, _ = self.call("GET", "/v1/models", token=lease["api_key"])
         self.assertEqual(status, 401)
+        activity = self.health()["activity"]
+        self.assertGreaterEqual(activity["decisions"], 1)
+        self.assertGreaterEqual(activity["leases"], 1)
 
     def test_renew_keeps_the_key_and_release_revokes_it(self):
         wait_until(lambda: self.model("owner--decision@r1").get("state") == "ready")

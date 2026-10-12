@@ -8,6 +8,8 @@
     <string>Fish Stack</string>
     <key>CFBundleIdentifier</key>
     <string>dev.fishstack.FishStack</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleExecutable</key>
     <string>FishStack</string>
     <key>CFBundlePackageType</key>

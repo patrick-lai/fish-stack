@@ -17,9 +17,17 @@ struct RoleHealth: Decodable, Equatable {
     let loaded: Bool
 }
 
+/// What the server has answered since it started. Absent on servers that predate the counters.
+struct Activity: Decodable, Equatable {
+    let decisions: Int
+    let embeddings: Int
+    let leases: Int
+}
+
 struct Health: Decodable, Equatable {
     let status: String
     let roles: [String: RoleHealth]
+    let activity: Activity?
 }
 
 struct ModelRecord: Decodable, Equatable, Identifiable {

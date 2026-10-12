@@ -35,7 +35,7 @@ Listens on `127.0.0.1` only. Every route except `GET /health` and the lease rout
 
 | Method and path | Purpose |
 | --- | --- |
-| `GET /health` | Protocol version, role states and whether each engine is loaded. |
+| `GET /health` | Protocol version, role states, whether each engine is loaded, and `activity` counts since start (`decisions`, `embeddings`, `leases`). |
 | `POST /v1/systemone` | Decision requests. Same request and response shape as `jev-local` (protocol 1). Accepts the master key or a live lease key. |
 | `POST /v1/leases` | pAtelier-style lease for `protocol: "jev-systemone"`. Returns `patelier.lease/1` with `lease_id`, `base_url`, `api_key` and `expires_at`. Answers 503 with a `patelier.error/1` envelope while the decision model loads, and never blocks on the load. |
 | `PUT /v1/leases/{id}` | Renews a lease. The key stays the same and the expiry moves forward. 404 once the lease has expired or been released. |
@@ -64,7 +64,8 @@ Refusals follow `jev-local`: 400 for a malformed body, 401 for a bad key, 411 wi
 
 ## Menu-bar app
 
-- `MenuBarExtra` with status, one row per role, downloads with progress, cancel and delete, and an add-model field that accepts a repo id or Hugging Face URL.
+- An `NSStatusItem` with an `NSPopover` in dark appearance, the same pairing CommissionAI's tray uses. The popover shows a brand header with a status pill, a hero card with the loaded-model dial and the `/health` activity counts (decisions served, embeddings served, live leases), served models per role, the library with progress, cancel and delete, and an add-model field that accepts a repo id or Hugging Face URL.
+- The menu-bar glyph is a monochrome template fish. It is solid when both models are loaded, breathes while loading, is hollow when the server is offline, and gets a dot when something needs attention. The app icon is drawn from the same fish geometry by `FishStack --render-icon`, which `scripts/build-app.sh` packs into `AppIcon.icns`.
 - Starts `fishd` from the bundled `runtime/` with `uv sync` into `~/Library/Application Support/FishStack/venv`, then polls `/health`.
 - `fishd` exits when its parent exits, so a crashed app does not leave a server running.
 

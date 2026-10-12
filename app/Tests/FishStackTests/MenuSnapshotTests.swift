@@ -3,7 +3,7 @@ import SwiftUI
 import XCTest
 @testable import FishStack
 
-/// Renders the real menu against a running fishd. Opt in with FISH_STACK_SNAPSHOT=/path/to.png,
+/// Renders the real popover against a running fishd. Opt in with FISH_STACK_SNAPSHOT=/path/to.png,
 /// FISH_STACK_PORT and FISH_STACK_STATE, because it needs a live server and a menu-bar session.
 @MainActor
 final class MenuSnapshotTests: XCTestCase {
@@ -16,7 +16,7 @@ final class MenuSnapshotTests: XCTestCase {
         server.start()
         try await waitUntil(timeout: 20) { server.health != nil && !server.models.isEmpty }
 
-        let host = NSHostingView(rootView: StatusMenu(server: server).background(Color(nsColor: .windowBackgroundColor)))
+        let host = NSHostingView(rootView: StatusPanel(server: server).background(Color(nsColor: .windowBackgroundColor)))
         host.frame = NSRect(origin: .zero, size: host.fittingSize)
         let window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         window.contentView = host
