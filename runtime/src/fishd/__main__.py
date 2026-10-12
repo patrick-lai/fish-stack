@@ -1,11 +1,13 @@
 import argparse
 import logging
 import os
+import signal
 import sys
 import threading
 import time
 from pathlib import Path
 
+from fishd import discovery
 from fishd.server import make_server
 from fishd.service import Service
 from fishd.state import State
@@ -14,7 +16,12 @@ DEFAULT_STATE_DIR = Path.home() / "Library" / "Application Support" / "FishStack
 HOST = "127.0.0.1"
 
 
-def exit_with_parent(service):
+def stop_serving(service, root):
+    service.shutdown()
+    discovery.withdraw(root, os.getpid())
+
+
+def exit_with_parent(stop):
     # The menu-bar app owns this process. When it dies, the server must not outlive it.
     parent = os.getppid()
 
@@ -22,7 +29,7 @@ def exit_with_parent(service):
         while True:
             time.sleep(1)
             if os.getppid() != parent:
-                service.shutdown()
+                stop()
                 os._exit(0)
 
     threading.Thread(target=watch, daemon=True).start()
@@ -33,9 +40,22 @@ def serve(args):
     state = State(args.state_dir)
     service = Service(state)
     server = make_server(HOST, args.port, service, state.api_key())
+    port = server.server_address[1]
+    service.origin = "http://%s:%d" % (HOST, port)
+    root = discovery.home(args.patelier_home)
+    discovery.publish(root, os.getpid(), port)
+
+    def stop():
+        stop_serving(service, root)
+
+    def terminate(signum, frame):
+        stop()
+        os._exit(0)
+
+    signal.signal(signal.SIGTERM, terminate)
+    exit_with_parent(stop)
     service.start()
-    exit_with_parent(service)
-    logging.getLogger("fishd").info("serving on http://%s:%d", HOST, args.port)
+    logging.getLogger("fishd").info("serving on http://%s:%d, leases published under %s", HOST, port, root)
     server.serve_forever()
 
 
@@ -45,6 +65,7 @@ def main(argv=None):
     serve_parser = commands.add_parser("serve", help="run the model server on 127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8089)
     serve_parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE_DIR)
+    serve_parser.add_argument("--patelier-home", type=Path, default=None, help="where run/daemon.json is written (default: $PATELIER_HOME or ~/.patelier)")
     args = parser.parse_args(argv)
     if args.command == "serve":
         serve(args)

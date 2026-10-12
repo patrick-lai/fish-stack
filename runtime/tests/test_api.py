@@ -75,6 +75,7 @@ class ServerTests(unittest.TestCase):
         self.service = Service(state, loaders=FAKE_LOADERS, command=fake_command)
         self.server = make_server("127.0.0.1", 0, self.service, self.key)
         self.port = self.server.server_address[1]
+        self.service.origin = "http://127.0.0.1:%d" % self.port
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.stop)
         self.service.start()
@@ -85,11 +86,11 @@ class ServerTests(unittest.TestCase):
         self.server.shutdown()
         self.server.server_close()
 
-    def call(self, method, path, body=None, auth=True):
+    def call(self, method, path, body=None, auth=True, token=None):
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
         headers = {"Content-Type": "application/json"}
         if auth:
-            headers["Authorization"] = "Bearer " + self.key
+            headers["Authorization"] = "Bearer " + (token or self.key)
         payload = None if body is None else json.dumps(body).encode()
         connection.request(method, path, body=payload, headers=headers)
         response = connection.getresponse()
@@ -130,6 +131,45 @@ class ServerTests(unittest.TestCase):
         status, data = self.call("DELETE", "/v1/models/owner--decision@r1")
         self.assertEqual(status, 409)
         self.assertIn("active", data["detail"])
+
+    def test_a_lease_waits_for_the_decision_model_then_opens_the_decision_route(self):
+        wait_until(lambda: self.model("owner--decision@r1").get("state") == "ready")
+        request = {"schema": "patelier.lease-request/1", "product": "commission", "purpose": "classify", "ttl_s": 120, "protocol": "jev-systemone"}
+        status, data = self.call("POST", "/v1/leases", request, auth=False)
+        self.assertEqual((status, data["schema"], data["code"]), (503, "patelier.error/1", "decision.warming"))
+        self.assertGreater(data["retry_after_s"], 0)
+        wait_until(lambda: self.health()["roles"]["decision"]["loaded"])
+        status, lease = self.call("POST", "/v1/leases", request, auth=False)
+        self.assertEqual(status, 200)
+        self.assertEqual(lease["schema"], "patelier.lease/1")
+        self.assertEqual(lease["base_url"], "http://127.0.0.1:%d" % self.port)
+        self.assertEqual(lease["protocol"], "jev-systemone")
+        self.assertRegex(lease["lease_id"], r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+        self.assertGreaterEqual(len(lease["api_key"]), 16)
+        self.assertNotEqual(lease["api_key"], self.key)
+        self.assertTrue(lease["expires_at"].endswith("Z"))
+        status, data = self.call("POST", "/v1/systemone", {"state": "x", "questions": {"t": {"type": "noul"}}}, token=lease["api_key"])
+        self.assertEqual(status, 200)
+        self.assertEqual(data["answers"], {"t": {"type": "noul", "noul": 0.9}})
+        status, _ = self.call("GET", "/v1/models", token=lease["api_key"])
+        self.assertEqual(status, 401)
+
+    def test_renew_keeps_the_key_and_release_revokes_it(self):
+        wait_until(lambda: self.model("owner--decision@r1").get("state") == "ready")
+        wait_until(lambda: self.call("POST", "/v1/leases", {"protocol": "jev-systemone"}, auth=False)[0] == 200)
+        _, lease = self.call("POST", "/v1/leases", {"protocol": "jev-systemone"}, auth=False)
+        status, renewed = self.call("PUT", "/v1/leases/" + lease["lease_id"], auth=False)
+        self.assertEqual((status, renewed["api_key"]), (200, lease["api_key"]))
+        status, _ = self.call("DELETE", "/v1/leases/" + lease["lease_id"], auth=False)
+        self.assertEqual(status, 200)
+        status, _ = self.call("POST", "/v1/systemone", {"state": "x", "questions": {"t": {"type": "noul"}}}, token=lease["api_key"])
+        self.assertEqual(status, 401)
+        status, data = self.call("PUT", "/v1/leases/" + lease["lease_id"], auth=False)
+        self.assertEqual((status, data["code"]), (404, "patelier.not_found"))
+
+    def test_a_lease_for_another_protocol_is_refused(self):
+        status, data = self.call("POST", "/v1/leases", {"protocol": "other"}, auth=False)
+        self.assertEqual((status, data["code"]), (422, "patelier.invalid"))
 
     def model(self, key):
         return next((item for item in self.call("GET", "/v1/models")[1]["data"] if item["id"] == key), {})

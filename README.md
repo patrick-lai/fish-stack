@@ -62,12 +62,17 @@ curl -s -X POST -H "Authorization: Bearer $KEY" -H 'Content-Type: application/js
 - `<state>/models/<owner--name@revision>/` holds each model. A `READY` file marks a model as complete. Partial downloads are kept and resume.
 - `<state>/logs/` holds one log per download and the app's logs.
 
+## CommissionAI
+
+fish-stack replaces pAtelier for CommissionAI. Once it runs, it writes `~/.patelier/run/daemon.json`, and CommissionAI's local JEV leases the decision endpoint from it instead of starting its own `jev-local` runtime. CommissionAI reads the lease when its local JEV starts, so restart CommissionAI after fish-stack is up to switch. If the lease is refused, CommissionAI falls back to its own runtime. The record is removed when fish-stack quits.
+
+The end-to-end check lives in the commission-ai repo. It is the ignored test `fish_stack_lease`, which runs CommissionAI's real `LocalJev` against a running fish-stack. From `service/` in that repo: `cargo test -p commission-service --test suite commissionai_takes_the_decision_lease_from_fish_stack -- --ignored --nocapture`.
+
 ## Not in this version
 
 - Changing the active model from the app or the API (edit `config.json` and restart).
 - Hugging Face search.
 - A chat LLM endpoint.
-- Registering with pAtelier leases, so CommissionAI would still start its own `jev-local` server.
 - Reranking and ColBERT embeddings used by CommissionAI memory.
 
 ## Layout

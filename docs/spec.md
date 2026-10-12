@@ -14,8 +14,11 @@ Fish Stack is a native macOS menu-bar app. It runs a local model server (`fishd`
 - Swapping the active model from the app or the API. The active model comes from `config.json`.
 - Hugging Face search.
 - A chat LLM endpoint. The `mlx-lm` package is in place for it, but no route exists yet.
-- Registering the endpoint with pAtelier leases. CommissionAI currently starts its own decision server through `jev_local.rs`.
 - Reranking and late-interaction (ColBERT) embeddings used by CommissionAI memory.
+
+## pAtelier replacement
+
+fish-stack takes pAtelier's place for CommissionAI. On start it writes `run/daemon.json` (`{"pid", "port"}`) under the pAtelier home: `--patelier-home`, else `$PATELIER_HOME`, else `~/.patelier`. CommissionAI's local JEV reads that record, leases the decision endpoint with `POST /v1/leases`, verifies it with its billing smoke test, renews it at half-life and releases it on shutdown. If the lease is not granted, CommissionAI falls back to its own `jev-local` runtime, as before. The record is removed on quit, and on SIGTERM. `make run-dev` writes into `state-dev/patelier`, so the dev server never takes over the real home.
 
 ## Models
 
@@ -26,12 +29,15 @@ Fish Stack is a native macOS menu-bar app. It runs a local model server (`fishd`
 
 ## Runtime API
 
-Listens on `127.0.0.1` only. Every route except `GET /health` needs `Authorization: Bearer <key>`. The key is generated on first run and stored in `<state>/api-key` with mode `0600`.
+Listens on `127.0.0.1` only. Every route except `GET /health` and the lease routes needs `Authorization: Bearer <key>`. The key is generated on first run and stored in `<state>/api-key` with mode `0600`. `POST /v1/systemone` also accepts a live lease key (below), and nothing else does.
 
 | Method and path | Purpose |
 | --- | --- |
 | `GET /health` | Protocol version, role states and whether each engine is loaded. |
-| `POST /v1/systemone` | Decision requests. Same request and response shape as `jev-local` (protocol 1). |
+| `POST /v1/systemone` | Decision requests. Same request and response shape as `jev-local` (protocol 1). Accepts the master key or a live lease key. |
+| `POST /v1/leases` | pAtelier-style lease for `protocol: "jev-systemone"`. Returns `patelier.lease/1` with `lease_id`, `base_url`, `api_key` and `expires_at`. Answers 503 with a `patelier.error/1` envelope while the decision model loads, and never blocks on the load. |
+| `PUT /v1/leases/{id}` | Renews a lease. The key stays the same and the expiry moves forward. 404 once the lease has expired or been released. |
+| `DELETE /v1/leases/{id}` | Releases a lease and revokes its key at once. |
 | `POST /v1/embeddings` | `{"input": string or [string], "model"?: string}` returns `{"object":"list","data":[{"index","embedding"}],"model","usage"}`. |
 | `GET /v1/models` | Known models with role, state, progress and whether each is active. |
 | `POST /v1/models` | `{"source": "owner/name or Hugging Face URL", "role": "decision" or "embedding", "revision"?: "main"}` starts a download (202). |

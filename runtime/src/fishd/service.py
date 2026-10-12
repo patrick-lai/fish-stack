@@ -1,5 +1,7 @@
+import logging
 import shutil
 import threading
+from datetime import datetime, timezone
 
 from fishd import PROTOCOL, VERSION
 from fishd.catalog import ROLES
@@ -8,11 +10,18 @@ from fishd.embedding import load_embedding_engine
 from fishd.errors import Refused
 from fishd.hf import model_key, parse_source
 from fishd.jobs import ACTIVE_STATES, Jobs, worker_command
+from fishd.leases import Leases
 from fishd.state import config_key
 
 LOADERS = {"decision": load_decision_engine, "embedding": load_embedding_engine}
+LEASE_PROTOCOL = "jev-systemone"
 MAX_INPUTS = 64
 MAX_INPUT_CHARS = 8000
+log = logging.getLogger("fishd")
+
+
+def _stamp(epoch_seconds):
+    return datetime.fromtimestamp(epoch_seconds, timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _texts(value):
@@ -26,22 +35,28 @@ def _texts(value):
 
 
 class Service:
-    def __init__(self, state, loaders=LOADERS, command=worker_command):
+    def __init__(self, state, loaders=LOADERS, command=worker_command, origin="", leases=None):
         self.state = state
         self.jobs = Jobs(state, command)
+        self.origin = origin
+        self.leases = leases or Leases()
         self._loaders = loaders
         self._engines = {}
+        self._warming = set()
+        self._warm_lock = threading.Lock()
         self._load_lock = threading.Lock()
         self._gates = {role: threading.Lock() for role in ROLES}
 
     def start(self):
         config = self.state.config()
-        if not config["download_on_start"]:
-            return
+        if config["download_on_start"]:
+            for role in ROLES:
+                entry = config[role]
+                if self.state.ready_record(config_key(entry)) is None:
+                    self.jobs.start(entry["repo"], entry["revision"], role)
         for role in ROLES:
-            entry = config[role]
-            if self.state.ready_record(config_key(entry)) is None:
-                self.jobs.start(entry["repo"], entry["revision"], role)
+            if self.state.ready_record(config_key(config[role])) is not None:
+                self._warm(role)
 
     def shutdown(self):
         self.jobs.shutdown()
@@ -96,6 +111,68 @@ class Service:
         engine = self._engine("decision")
         with self._gates["decision"]:
             return engine.decide(state, questions)
+
+    def lease(self, body):
+        """Issue a pAtelier-style decision lease. Answers fast; never waits for a model load."""
+        if not isinstance(body, dict) or body.get("protocol") != LEASE_PROTOCOL:
+            raise Refused(422, "protocol must be %s" % LEASE_PROTOCOL, code="patelier.invalid")
+        self._ready_engine("decision")
+        lease_id, key, expires = self.leases.issue(body.get("ttl_s"))
+        return self._lease_record(lease_id, key, expires)
+
+    def renew_lease(self, lease_id):
+        renewed = self.leases.renew(lease_id)
+        if renewed is None:
+            raise Refused(404, "No live lease with that id.", code="patelier.not_found")
+        key, expires = renewed
+        return self._lease_record(lease_id, key, expires)
+
+    def _lease_record(self, lease_id, key, expires):
+        return {
+            "schema": "patelier.lease/1",
+            "lease_id": lease_id,
+            "base_url": self.origin,
+            "model": self.state.config()["decision"]["repo"],
+            "protocol": LEASE_PROTOCOL,
+            "api_key": key,
+            "expires_at": _stamp(expires),
+        }
+
+    def release_lease(self, lease_id):
+        if not self.leases.release(lease_id):
+            raise Refused(404, "No live lease with that id.", code="patelier.not_found")
+
+    def accepts_lease(self, key):
+        return self.leases.accepts(key)
+
+    def _ready_engine(self, role):
+        # Never takes _load_lock: a model load holds it, and a lease must answer in well under a second.
+        engine = self._engines.get(role)
+        if engine is not None:
+            return engine
+        entry = self.state.config()[role]
+        if self.state.ready_record(config_key(entry)) is None:
+            raise Refused(503, "The %s model is not ready yet. Check GET /v1/models for progress." % role, code="decision.not_ready", retry_after=60)
+        self._warm(role)
+        raise Refused(503, "The %s model is loading. Try again in a few seconds." % role, code="decision.warming", retry_after=5)
+
+    def _warm(self, role):
+        with self._warm_lock:
+            if role in self._engines or role in self._warming:
+                return
+            self._warming.add(role)
+        threading.Thread(target=self._warm_now, args=(role,), name="warm-" + role, daemon=True).start()
+
+    def _warm_now(self, role):
+        try:
+            self._engine(role)
+        except Refused as refused:
+            log.warning("could not load the %s model: %s", role, refused.detail)
+        except Exception:
+            log.exception("could not load the %s model", role)
+        finally:
+            with self._warm_lock:
+                self._warming.discard(role)
 
     def embed(self, body):
         texts = _texts(body.get("input"))
