@@ -26,20 +26,22 @@ struct TrayGuest: Decodable, Equatable, Identifiable {
     }
 }
 
-/// Watches the tray folder and keeps the list of live guest tabs current.
+/// Keeps the list of live guest tabs current without polling. It wakes only when a file in the tray folder
+/// changes, or when a guest's process exits, so an idle menu bar costs nothing.
 @MainActor
 @Observable
 final class TrayRegistry {
     private(set) var guests: [TrayGuest] = []
+    /// True while the popover is open. Guest pages are loaded only then, so a closed popover holds no web view.
+    private(set) var isShowing = false
     private let directory: URL
-    private var timer: Timer?
+    @ObservationIgnored private var folderWatch: DispatchSourceFileSystemObject?
+    @ObservationIgnored private var exitWatches: [Int32: DispatchSourceProcess] = [:]
 
     init(home: URL = TrayRegistry.defaultHome()) {
         directory = home.appendingPathComponent("tray", isDirectory: true)
+        watchFolder()
         refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refresh() }
-        }
     }
 
     /// The same home fishd uses: FISH_STACK_HOME when set, otherwise ~/.fishStack.
@@ -61,6 +63,10 @@ final class TrayRegistry {
         try? FileManager.default.removeItem(at: ownerFile)
     }
 
+    func setShowing(_ showing: Bool) {
+        isShowing = showing
+    }
+
     private var ownerFile: URL {
         directory.appendingPathComponent("owner.json")
     }
@@ -80,5 +86,51 @@ final class TrayRegistry {
         if found != guests {
             guests = found
         }
+        watchGuestProcesses()
+    }
+
+    /// Watches the folder for entries being added, removed or renamed. Guests write atomically, so a change always shows here.
+    private func watchFolder() {
+        folderWatch?.cancel()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let fd = open(directory.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .delete, .rename], queue: .main)
+        source.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.folderChanged() }
+        }
+        source.setCancelHandler { close(fd) }
+        folderWatch = source
+        source.resume()
+    }
+
+    private func folderChanged() {
+        // If the folder itself was removed, watch the new one that is created in its place.
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            watchFolder()
+        }
+        refresh()
+    }
+
+    /// Each guest's process is watched so its tab disappears the moment that process exits.
+    private func watchGuestProcesses() {
+        let pids = Set(guests.map(\.pid))
+        for pid in exitWatches.keys where !pids.contains(pid) {
+            exitWatches.removeValue(forKey: pid)?.cancel()
+        }
+        for pid in pids where exitWatches[pid] == nil {
+            let source = DispatchSource.makeProcessSource(identifier: pid, eventMask: .exit, queue: .main)
+            source.setEventHandler { [weak self] in
+                MainActor.assumeIsolated { self?.guestExited(pid) }
+            }
+            exitWatches[pid] = source
+            source.resume()
+        }
+    }
+
+    /// The process has exited. Its tab goes now, without waiting for the process to be reaped.
+    private func guestExited(_ pid: Int32) {
+        exitWatches.removeValue(forKey: pid)?.cancel()
+        guests.removeAll { $0.pid == pid }
     }
 }

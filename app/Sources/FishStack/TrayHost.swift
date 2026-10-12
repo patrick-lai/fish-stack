@@ -8,8 +8,10 @@ struct TrayHost: View {
     let registry: TrayRegistry
     /// nil selects Fish Stack. A guest id that has gone away falls back to Fish Stack.
     @State private var selection: String?
+    /// A guest page sets its own height, so the popover is as tall as the tab's content.
+    @State private var guestHeight: CGFloat = 440
 
-    private static let guestSize = CGSize(width: 388, height: 440)
+    private static let guestWidth: CGFloat = 388
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,9 +30,15 @@ struct TrayHost: View {
 
     @ViewBuilder
     private var content: some View {
-        if let guest = activeGuest, let url = URL(string: guest.url) {
-            GuestPanel(url: url)
-                .frame(width: Self.guestSize.width, height: Self.guestSize.height)
+        if let guest = activeGuest {
+            // The guest page is loaded only while the popover is open, so each open shows fresh data and a closed tray holds no web view.
+            if registry.isShowing, let url = URL(string: guest.url) {
+                GuestPanel(url: url, height: $guestHeight)
+                    .frame(width: Self.guestWidth, height: guestHeight)
+            } else {
+                Night.surface
+                    .frame(width: Self.guestWidth, height: guestHeight)
+            }
         } else {
             StatusPanel(server: server)
         }
@@ -69,24 +77,53 @@ struct TrayHost: View {
 }
 
 /// Shows another app's tray page, served on loopback. Only the page's URL changes between tabs.
+/// The page reports its height, and the panel takes that height, so the popover fits the tab's content.
 struct GuestPanel: NSViewRepresentable {
     let url: URL
+    @Binding var height: CGFloat
+
+    /// Sends the page's height to Fish Stack whenever it changes.
+    private static let heightScript = """
+    (() => {
+      const report = () => window.webkit.messageHandlers.fishStackHeight.postMessage(Math.ceil(document.body.getBoundingClientRect().height));
+      new ResizeObserver(report).observe(document.body);
+      report();
+    })();
+    """
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
+        let content = WKUserContentController()
+        content.addUserScript(WKUserScript(source: Self.heightScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        content.add(context.coordinator, name: "fishStackHeight")
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController = content
+        let view = WKWebView(frame: .zero, configuration: configuration)
+        view.underPageBackgroundColor = NSColor(Night.surface)
+        return view
     }
 
     func updateNSView(_ view: WKWebView, context: Context) {
+        let binding = $height
+        context.coordinator.setHeight = { value in
+            binding.wrappedValue = value
+        }
         guard context.coordinator.loaded != url else { return }
         context.coordinator.loaded = url
         view.load(URLRequest(url: url))
     }
 
-    final class Coordinator {
+    @MainActor
+    final class Coordinator: NSObject, WKScriptMessageHandler {
         var loaded: URL?
+        var setHeight: ((CGFloat) -> Void)?
+
+        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let number = message.body as? NSNumber, number.doubleValue > 0 else { return }
+            setHeight?(CGFloat(number.doubleValue))
+        }
     }
 }

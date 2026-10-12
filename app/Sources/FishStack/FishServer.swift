@@ -43,6 +43,8 @@ final class FishServer {
     private let client: FishClient
     private var process: Process?
     private var supervisor: Task<Void, Never>?
+    /// True while the menu is open.
+    private var watched = false
 
     init(config: ServerConfig = .fromEnvironment()) {
         self.config = config
@@ -111,10 +113,24 @@ final class FishServer {
         while !Task.isCancelled {
             await refresh()
             do {
-                try await Task.sleep(for: .seconds(2))
+                try await Task.sleep(for: pollInterval)
             } catch {
                 return
             }
+        }
+    }
+
+    /// Fast while the menu is open or the server is not fully up; slow when a closed menu only needs to notice a change.
+    private var pollInterval: Duration {
+        let settled = health.map { !$0.roles.isEmpty && $0.roles.values.allSatisfy(\.loaded) } ?? false
+        return watched || !settled ? .seconds(2) : .seconds(15)
+    }
+
+    /// Called as the menu opens and closes. Opening refreshes straight away instead of waiting out a slow poll.
+    func setWatched(_ value: Bool) {
+        watched = value
+        if value {
+            Task { await refresh() }
         }
     }
 

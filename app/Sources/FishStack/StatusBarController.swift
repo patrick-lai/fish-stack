@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import SwiftUI
 
 /// Owns the menu-bar item and its popover, the same NSStatusItem + NSPopover pairing CommissionAI uses.
@@ -9,7 +10,8 @@ final class StatusBarController: NSObject {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
     private let registry = TrayRegistry()
-    private var ticker: Timer?
+    /// Runs only while the server is loading, to breathe the glyph. Idle, the icon is redrawn only when its state changes.
+    private var pulseTimer: Timer?
     private var lastImageKey: String?
 
     init(server: FishServer) {
@@ -19,6 +21,7 @@ final class StatusBarController: NSObject {
         popover.behavior = .transient
         popover.animates = true
         popover.appearance = NSAppearance(named: .darkAqua)
+        popover.delegate = self
         let host = NSHostingController(rootView: TrayHost(server: server, registry: registry))
         host.sizingOptions = [.preferredContentSize]
         popover.contentViewController = host
@@ -29,13 +32,19 @@ final class StatusBarController: NSObject {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.toolTip = "Fish Stack"
         }
-        refresh()
+        track()
         registry.publishOwner()
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.registry.withdrawOwner() }
         }
-        ticker = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refresh() }
+    }
+
+    /// Re-applies the glyph whenever the server state it reads changes.
+    private func track() {
+        withObservationTracking {
+            apply()
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in self?.track() }
         }
     }
 
@@ -47,16 +56,32 @@ final class StatusBarController: NSObject {
         return !roles.isEmpty && roles.allSatisfy(\.loaded) ? .serving : .loading
     }
 
-    private func refresh() {
+    private func apply() {
         let state = markState
-        let pulse: CGFloat = state == .loading ? CGFloat(0.5 + 0.5 * sin(Date().timeIntervalSinceReferenceDate * 2 * .pi / 1.6)) : 1
+        let loading = state == .loading
+        let pulse: CGFloat = loading ? CGFloat(0.5 + 0.5 * sin(Date().timeIntervalSinceReferenceDate * 2 * .pi / 1.6)) : 1
         let attention = server.notice != nil
         // Quantise the pulse so the image is only rebuilt when the glyph would look different.
         let key = "\(state)-\(Int(pulse * 10))-\(attention)"
-        guard key != lastImageKey else { return }
-        lastImageKey = key
-        item.button?.image = MenuGlyph.image(state, pulse: pulse, attention: attention)
-        item.button?.setAccessibilityLabel("Fish Stack, \(accessibilityState)")
+        if key != lastImageKey {
+            lastImageKey = key
+            item.button?.image = MenuGlyph.image(state, pulse: pulse, attention: attention)
+            item.button?.setAccessibilityLabel("Fish Stack, \(accessibilityState)")
+        }
+        setPulsing(loading)
+    }
+
+    private func setPulsing(_ on: Bool) {
+        if on, pulseTimer == nil {
+            let timer = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.apply() }
+            }
+            timer.tolerance = 0.03
+            pulseTimer = timer
+        } else if !on {
+            pulseTimer?.invalidate()
+            pulseTimer = nil
+        }
     }
 
     private var accessibilityState: String {
@@ -106,5 +131,17 @@ final class StatusBarController: NSObject {
 
     @objc private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+}
+
+extension StatusBarController: NSPopoverDelegate {
+    func popoverWillShow(_ notification: Notification) {
+        registry.setShowing(true)
+        server.setWatched(true)
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        registry.setShowing(false)
+        server.setWatched(false)
     }
 }
