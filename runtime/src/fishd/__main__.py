@@ -43,7 +43,12 @@ def serve(args):
     port = server.server_address[1]
     service.origin = "http://%s:%d" % (HOST, port)
     root = discovery.home(args.home)
-    discovery.publish(root, os.getpid(), port)
+    if not discovery.publish(root, os.getpid(), port):
+        logging.getLogger("fishd").warning(
+            "another FishStack already publishes leases under %s; this server on port %d serves models but takes no leases",
+            root,
+            port,
+        )
 
     def stop():
         stop_serving(service, root)

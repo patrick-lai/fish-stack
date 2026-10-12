@@ -1,5 +1,7 @@
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -65,6 +67,21 @@ class DiscoveryTests(unittest.TestCase):
         discovery.publish(self.root, 4242, 8089)
         record = json.loads((self.root / "run" / "daemon.json").read_text())
         self.assertEqual(record, {"pid": 4242, "port": 8089})
+
+    def test_a_second_server_leaves_a_live_servers_record_alone(self):
+        # This test process stands in for a running FishStack: its pid is alive.
+        discovery.publish(self.root, os.getpid(), 8089)
+        self.assertFalse(discovery.publish(self.root, 4343, 8090))
+        record = json.loads((self.root / "run" / "daemon.json").read_text())
+        self.assertEqual(record, {"pid": os.getpid(), "port": 8089})
+
+    def test_a_dead_servers_record_is_replaced(self):
+        child = subprocess.Popen([sys.executable, "-c", "pass"])
+        child.wait()
+        discovery.publish(self.root, child.pid, 8089)
+        self.assertTrue(discovery.publish(self.root, 4343, 8090))
+        record = json.loads((self.root / "run" / "daemon.json").read_text())
+        self.assertEqual(record, {"pid": 4343, "port": 8090})
 
     def test_withdraw_removes_only_this_process_record(self):
         discovery.publish(self.root, 4242, 8089)
