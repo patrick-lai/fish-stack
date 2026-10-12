@@ -54,3 +54,10 @@ cat > "$dist/latest.json" <<JSON
 JSON
 echo "$zip"
 cat "$dist/latest.json"
+
+# Publishes the same zip and manifest as a GitHub release, the mirror the installer falls back to.
+if [ "${FISH_STACK_GITHUB_RELEASE:-0}" = 1 ]; then
+  gh release create "v$version" "$zip" "$dist/latest.json" --repo patrick-lai/fish-stack --target main \
+    --title "FishStack $version" \
+    --notes "Notarized FishStack $version for macOS 14+ on Apple silicon. SHA-256 of $name: $sha. Mirror of $base_url/"
+fi
