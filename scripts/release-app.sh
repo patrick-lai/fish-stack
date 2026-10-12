@@ -47,6 +47,7 @@ cat > "$dist/latest.json" <<JSON
   "notarized": true,
   "team": "$(printf '%s' "$identity" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')",
   "url": "$base_url/$name",
+  "mirror_url": "https://github.com/patrick-lai/fish-stack/releases/download/v$version/$name",
   "minimum_macos": "14.0",
   "architecture": "arm64"
 }
