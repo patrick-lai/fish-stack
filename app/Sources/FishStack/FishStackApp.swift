@@ -20,8 +20,11 @@ struct FishStackApp: App {
     }
 
     var body: some Scene {
-        Settings {
+        // SwiftUI needs a scene. This one is never inserted, so no settings or other window can open.
+        MenuBarExtra(isInserted: .constant(false)) {
             EmptyView()
+        } label: {
+            Text("")
         }
     }
 }
