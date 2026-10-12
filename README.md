@@ -4,10 +4,18 @@ A native macOS menu-bar app that serves local models to your other apps. It runs
 
 ## Requirements
 
-- Apple silicon Mac with 16 GB or more of memory
+For people using the app:
+
+- Apple silicon Mac with macOS 14 or later and 16 GB or more of memory
+- About 12 GB free disk for the models (8.4 GB download, plus the converted copy)
+- Internet for the one-time setup and the model downloads
+
+Nothing else is needed. The app bundles `uv`, which installs Python 3.12 and the pinned packages on first launch. It checks these requirements first and shows what to fix. If setup fails, it retries every 30 seconds.
+
+For building the app:
+
 - Xcode (the app builds with its toolchain, not the Command Line Tools)
-- [uv](https://docs.astral.sh/uv/) (`brew install uv`). It installs Python 3.12 and the pinned packages.
-- About 12 GB free disk for the decision model (8.4 GB download, plus the converted copy)
+- [uv](https://docs.astral.sh/uv/) (`brew install uv`). `scripts/build-app.sh` copies it into the app. Set `UV_BIN` to use another copy.
 
 ## Run the tests
 

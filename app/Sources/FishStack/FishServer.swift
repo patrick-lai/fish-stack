@@ -84,14 +84,23 @@ final class FishServer {
         if await client.isServing() {
             phase = "Running"
         } else {
-            do {
-                try await prepareRuntime()
-                try launch()
-                phase = "Starting"
-            } catch {
-                notice = error.localizedDescription
-                phase = "Stopped"
-                return
+            // Setup failures (no internet, a full disk) retry on their own, so fixing the problem is enough.
+            while !Task.isCancelled {
+                do {
+                    try await setUp()
+                    try launch()
+                    phase = "Starting"
+                    notice = nil
+                    break
+                } catch {
+                    notice = error.localizedDescription
+                    phase = "Stopped"
+                    do {
+                        try await Task.sleep(for: .seconds(30))
+                    } catch {
+                        return
+                    }
+                }
             }
         }
         while !Task.isCancelled {
@@ -124,14 +133,34 @@ final class FishServer {
         config.stateDir.appendingPathComponent("venv", isDirectory: true)
     }
 
+    /// Checks the Mac, then installs the Python runtime. The first setup needs internet and disk space.
+    private func setUp() async throws {
+        let info = ProcessInfo.processInfo
+        if let problem = Preflight.machineProblem(macOS: info.operatingSystemVersion, memory: info.physicalMemory) {
+            throw FishError(problem)
+        }
+        try FileManager.default.createDirectory(at: config.stateDir, withIntermediateDirectories: true)
+        let installed = FileManager.default.fileExists(atPath: venvURL.appendingPathComponent("bin/python").path)
+        if !installed {
+            let problem = Preflight.setupProblem(
+                freeDisk: Preflight.freeDisk(at: config.stateDir),
+                reachable: await Preflight.canReachSetupHosts()
+            )
+            if let problem {
+                throw FishError(problem)
+            }
+        }
+        try await prepareRuntime()
+    }
+
     private func prepareRuntime() async throws {
         guard let runtime = config.runtimeDir, FileManager.default.fileExists(atPath: runtime.path) else {
-            throw FishError("The model runtime is missing from this app. Rebuild it with make app.")
+            throw FishError("The model runtime is missing from this app. Reinstall FishStack from commissionai.app.")
         }
         guard let uv = Self.locateUV() else {
-            throw FishError("Install uv to set up the model runtime: brew install uv")
+            throw FishError("The setup tool is missing from this app. Reinstall FishStack from commissionai.app.")
         }
-        phase = "Installing the model runtime"
+        phase = "Setting up the model runtime (first run only)"
         try FileManager.default.createDirectory(at: logsURL, withIntermediateDirectories: true)
         try await Self.run(
             uv,
@@ -157,9 +186,12 @@ final class FishServer {
         self.process = process
     }
 
+    /// The bundled uv comes first, so setup never depends on Homebrew. The others only serve development runs.
     private static func locateUV() -> URL? {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let candidates = ["/opt/homebrew/bin/uv", "/usr/local/bin/uv", home.appendingPathComponent(".local/bin/uv").path]
+        let bundled = Bundle.main.resourceURL?.appendingPathComponent("bin/uv").path
+        let candidates = [bundled, "/opt/homebrew/bin/uv", "/usr/local/bin/uv", home.appendingPathComponent(".local/bin/uv").path]
+            .compactMap { $0 }
         return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }.map { URL(fileURLWithPath: $0) }
     }
 

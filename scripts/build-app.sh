@@ -20,6 +20,15 @@ rm -rf "$iconset"
 iconutil -c icns "$iconset" -o "$app/Contents/Resources/AppIcon.icns"
 cp "$root/runtime/pyproject.toml" "$root/runtime/uv.lock" "$app/Contents/Resources/runtime/"
 cp -R "$root/runtime/src" "$app/Contents/Resources/runtime/src"
+# The setup tool ships inside the app, so a Mac without Homebrew can install the Python runtime.
+uv_bin=${UV_BIN:-$(command -v uv || true)}
+if [ -z "$uv_bin" ] || [ ! -x "$uv_bin" ]; then
+  echo "uv is needed to bundle the setup tool: brew install uv, or set UV_BIN to its path" >&2
+  exit 1
+fi
+mkdir -p "$app/Contents/Resources/bin"
+cp "$uv_bin" "$app/Contents/Resources/bin/uv"
+chmod 755 "$app/Contents/Resources/bin/uv"
 # Bytecode caches written by a previous run would break the code signature.
 find "$app/Contents/Resources/runtime" -name __pycache__ -type d -prune -exec rm -rf {} +
 codesign --force --sign - "$app"

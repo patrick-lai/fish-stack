@@ -14,6 +14,8 @@ base_url=${FISH_STACK_BASE_URL:-https://commissionai.app/fish-stack}
 app="$root/build/FishStack.app"
 version=$(plutil -extract CFBundleShortVersionString raw "$root/app/Info.plist")
 
+# Notarization needs every executable inside the app signed, so the bundled uv is signed on its own first.
+codesign --force --options runtime --timestamp --sign "$identity" "$app/Contents/Resources/bin/uv"
 codesign --force --options runtime --timestamp --sign "$identity" "$app"
 codesign --verify --strict --verbose=2 "$app"
 
