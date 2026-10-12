@@ -177,8 +177,26 @@ struct StatusPanel: View {
                 } else {
                     list
                 }
+                if needsReset {
+                    HStack(spacing: 8) {
+                        Text("Not the recommended models")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(Night.ink.opacity(0.45))
+                        Spacer(minLength: 8)
+                        GhostButton(title: "Reset to recommended", tone: .accent, symbol: "arrow.counterclockwise", height: 24) {
+                            Task { await server.resetToRecommended() }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                }
             }
         }
+    }
+
+    /// True when the two active models are not both the recommended ones, so a reset would change them.
+    private var needsReset: Bool {
+        server.models.filter { $0.active && $0.isRecommended }.count < Self.roles.count
     }
 
     // MARK: Add a model
@@ -289,7 +307,14 @@ private struct ModelRow: View {
             tone: rowTone,
             title: model.repo,
             detail: detail,
-            trailing: { actions },
+            trailing: {
+                HStack(spacing: 6) {
+                    if model.isRecommended {
+                        Chip(label: "Recommended", tone: .accent)
+                    }
+                    actions
+                }
+            },
             footer: { footerContent }
         )
     }

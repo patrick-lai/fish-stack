@@ -70,6 +70,11 @@ final class FishServer {
         await perform { try await client.delete(model.id) }
     }
 
+    /// Makes the recommended models the active ones again. Nothing is deleted.
+    func resetToRecommended() async {
+        await perform { try await client.resetToRecommended() }
+    }
+
     private func perform(_ action: () async throws -> Void) async {
         do {
             try await action()

@@ -95,6 +95,9 @@ def make_server(host, port, service, api_key):
                 if not isinstance(body, dict) or not isinstance(body.get("source"), str):
                     raise Refused(400, "request body must include a 'source' string and a 'role'")
                 return self.reply(202, service.start_download(body["source"], body.get("role"), body.get("revision")))
+            if method == "POST" and self.path == "/v1/config/reset":
+                service.reset_config()
+                return self.reply(200, {"detail": "Reset to the recommended models."})
             if method == "POST" and self.path == "/v1/embeddings":
                 body = self.read_json()
                 if not isinstance(body, dict):

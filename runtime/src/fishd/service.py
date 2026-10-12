@@ -1,10 +1,11 @@
+import copy
 import logging
 import shutil
 import threading
 from datetime import datetime, timezone
 
 from fishd import PROTOCOL, VERSION
-from fishd.catalog import ROLES
+from fishd.catalog import DEFAULT_CONFIG, ROLES
 from fishd.decision import load_decision_engine, parse_request
 from fishd.embedding import load_embedding_engine
 from fishd.errors import Refused
@@ -17,6 +18,8 @@ LOADERS = {"decision": load_decision_engine, "embedding": load_embedding_engine}
 LEASE_PROTOCOL = "jev-systemone"
 MAX_INPUTS = 64
 MAX_INPUT_CHARS = 8000
+# The models the defaults name. The app marks them as recommended and offers to restore them.
+RECOMMENDED = {config_key(DEFAULT_CONFIG[role]) for role in ROLES}
 log = logging.getLogger("fishd")
 
 
@@ -94,6 +97,16 @@ class Service:
             raise Refused(409, "This model is already downloaded.")
         job = self.jobs.start(repo, chosen, role)
         return self._describe(key, {"repo": job.repo, "revision": job.revision, "role": job.role}, False)
+
+    def reset_config(self):
+        """Puts the recommended models back in config.json. Nothing is deleted; missing recommended models download."""
+        with self._load_lock:
+            current = self.state.config()
+            for role in ROLES:
+                if config_key(current[role]) != config_key(DEFAULT_CONFIG[role]):
+                    self._engines.pop(role, None)
+            self.state.write_config(copy.deepcopy(DEFAULT_CONFIG))
+        self.start()
 
     def cancel_download(self, key):
         self._require_known(key)
@@ -254,5 +267,6 @@ class Service:
             "bytes_done": done,
             "bytes_total": total,
             "active": active,
+            "recommended": key in RECOMMENDED,
             "error": job.error if job is not None else None,
         }

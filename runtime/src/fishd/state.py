@@ -37,6 +37,12 @@ class State:
             raise Refused(500, "config.json is missing roles: %s" % ", ".join(missing))
         return config
 
+    def write_config(self, config: dict):
+        path = self.root / "config.json"
+        temporary = path.with_name("config.json.tmp")
+        temporary.write_text(json.dumps(config, indent=2) + "\n")
+        os.replace(temporary, path)
+
     def model_dir(self, key: str) -> Path:
         return self.models_dir / key
 

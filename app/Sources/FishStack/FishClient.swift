@@ -39,7 +39,13 @@ struct ModelRecord: Decodable, Equatable, Identifiable {
     let bytesDone: Int64
     let bytesTotal: Int64?
     let active: Bool
+    /// Absent on servers that predate the field, which read as not recommended.
+    let recommended: Bool?
     let error: String?
+
+    var isRecommended: Bool {
+        recommended ?? false
+    }
 
     var isDownloading: Bool {
         ["starting", "downloading", "converting"].contains(state)
@@ -88,6 +94,10 @@ struct FishClient: Sendable {
 
     func delete(_ id: String) async throws {
         let _: Detail = try await send("DELETE", "/v1/models/\(id)")
+    }
+
+    func resetToRecommended() async throws {
+        let _: Detail = try await send("POST", "/v1/config/reset")
     }
 
     private func send<Response: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, authorized: Bool = true) async throws -> Response {
