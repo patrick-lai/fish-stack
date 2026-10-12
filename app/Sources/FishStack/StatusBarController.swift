@@ -8,6 +8,7 @@ final class StatusBarController: NSObject {
     private let server: FishServer
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
+    private let registry = TrayRegistry()
     private var ticker: Timer?
     private var lastImageKey: String?
 
@@ -18,7 +19,7 @@ final class StatusBarController: NSObject {
         popover.behavior = .transient
         popover.animates = true
         popover.appearance = NSAppearance(named: .darkAqua)
-        let host = NSHostingController(rootView: StatusPanel(server: server))
+        let host = NSHostingController(rootView: TrayHost(server: server, registry: registry))
         host.sizingOptions = [.preferredContentSize]
         popover.contentViewController = host
 
@@ -29,6 +30,10 @@ final class StatusBarController: NSObject {
             button.toolTip = "Fish Stack"
         }
         refresh()
+        registry.publishOwner()
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.registry.withdrawOwner() }
+        }
         ticker = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refresh() }
         }
